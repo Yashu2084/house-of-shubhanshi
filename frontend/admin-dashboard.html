@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atelier Control Room — House of Shubhanshi</title>
+  <link rel="icon" type="image/svg+xml" href="assets/logo/house-of-shubhanshi-logo.svg">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body class="dashboard-page">
+
+  <!-- Site Header -->
+  <header class="site-header scrolled" id="siteHeader">
+    <div class="container">
+      <div class="header-inner">
+        <nav class="nav-group nav-left" aria-label="Primary Left Navigation">
+          <a href="about.html" class="nav-link">ABOUT</a>
+          <a href="shop.html" class="nav-link">SHOP</a>
+        </nav>
+
+        <div class="header-logo-container">
+          <a href="index.html" class="brand-logo-link" aria-label="House of Shubhanshi Home">
+            <img src="assets/logo/house-of-shubhanshi-logo.png" 
+                 onerror="this.onerror=null; this.src='assets/logo/house-of-shubhanshi-logo.svg'" 
+                 alt="House of Shubhanshi" 
+                 class="brand-logo-img">
+          </a>
+        </div>
+
+        <nav class="nav-group nav-right" aria-label="Primary Right Navigation">
+          <a href="admin-dashboard.html" class="nav-link active font-serif" style="color: var(--gold); font-weight: 600;" title="Atelier Control Room">ADMIN</a>
+          <a href="cart.html" class="nav-link cart-link" aria-label="Shopping Bag">
+            CART <span class="cart-count">0</span>
+          </a>
+          <button type="button" id="headerAdminLogout" class="nav-link nav-logout-btn" aria-label="Sign Out">
+            LOGOUT
+          </button>
+        </nav>
+
+        <button class="mobile-toggle" aria-label="Open navigation menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer -->
+  <aside class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+    <nav class="mobile-drawer-nav">
+      <a href="index.html" class="mobile-drawer-link">HOME</a>
+      <a href="about.html" class="mobile-drawer-link">ABOUT</a>
+      <a href="shop.html" class="mobile-drawer-link">SHOP</a>
+      <a href="admin-dashboard.html" class="mobile-drawer-link active" style="color: var(--gold);">ADMIN</a>
+      <a href="cart.html" class="mobile-drawer-link">CART (<span class="cart-count">0</span>)</a>
+      <a href="#" id="mobileLogoutBtn" class="mobile-drawer-link">LOGOUT</a>
+    </nav>
+    <div class="mobile-drawer-footer">
+      <p class="font-serif">HOUSE OF SHUBHANSHI</p>
+      <span class="gold-divider-diamond" style="display:inline-block; margin: 8px auto;"></span>
+      <p>WEAR THE DREAM</p>
+    </div>
+  </aside>
+
+  <!-- Mobile Dash Drawer Toggle -->
+  <button type="button" class="mobile-dash-toggle" aria-label="Open control room menu">
+    <span>☰</span> <span>CONTROL ROOM NAVIGATION</span>
+  </button>
+
+  <div class="dashboard-wrapper">
+    <!-- Luxury Atelier Control Room Sidebar -->
+    <aside class="dashboard-sidebar">
+      <div class="sidebar-brand-badge">
+        <span class="sidebar-role-tag">MASTER MANAGEMENT</span>
+        <h2 class="sidebar-title">ATELIER CONTROL</h2>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button type="button" class="sidebar-link active" data-section="paneAdminOverview">
+          <span class="sidebar-link-icon">✦</span> <span>OVERVIEW</span>
+        </button>
+        <button type="button" class="sidebar-link" data-section="paneAdminOrders">
+          <span class="sidebar-link-icon">❖</span> <span>ORDERS</span>
+        </button>
+        <button type="button" class="sidebar-link" data-section="paneAdminRentals">
+          <span class="sidebar-link-icon">✧</span> <span>RENTALS</span>
+        </button>
+        <button type="button" class="sidebar-link" data-section="paneAdminProducts">
+          <span class="sidebar-link-icon">◈</span> <span>PRODUCTS</span>
+        </button>
+        <button type="button" class="sidebar-link" data-section="paneAdminCollections">
+          <span class="sidebar-link-icon">❂</span> <span>COLLECTIONS</span>
+        </button>
+        <button type="button" class="sidebar-link" data-section="paneAdminCustomers">
+          <span class="sidebar-link-icon">👥</span> <span>CUSTOMERS</span>
+        </button>
+        <button type="button" class="sidebar-link" data-section="paneAdminSales">
+          <span class="sidebar-link-icon">📈</span> <span>SALES ANALYTICS</span>
+        </button>
+        <button type="button" class="sidebar-link" id="dashLogoutBtn" style="color: #F87171; margin-top: auto;">
+          <span class="sidebar-link-icon">⇦</span> <span>LOGOUT</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-user-footer">
+        <p class="sidebar-user-name">House Atelier Admin</p>
+        <p class="sidebar-user-email">admin@houseofshubhanshi.com</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="dashboard-main">
+
+      <!-- SECTION: OVERVIEW -->
+      <section id="paneAdminOverview" class="dash-section-pane">
+        <div class="dashboard-header">
+          <span class="dash-tag">ATELIER MASTER DESK</span>
+          <h1 class="dash-title">HOUSE CONTROL ROOM</h1>
+          <p class="dash-subtitle">Real-time status of orders, royal silhouettes, and sales metrics.</p>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-card-label">TOTAL SALES REVENUE</span>
+            <div id="statTotalSales" class="stat-card-val">₹ 0</div>
+            <div class="stat-card-sub">Fulfilled &amp; active orders</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">TOTAL ORDERS</span>
+            <div id="statTotalOrders" class="stat-card-val">0</div>
+            <div class="stat-card-sub">Commissions received</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">REGISTERED PATRONS</span>
+            <div id="statTotalCustomers" class="stat-card-val">0</div>
+            <div class="stat-card-sub">Private closet members</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">VAULT PIECES</span>
+            <div id="statTotalProducts" class="stat-card-val">0</div>
+            <div class="stat-card-sub">Atelier product listings</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">ACTIVE EDITS</span>
+            <div id="statActiveCollections" class="stat-card-val">0</div>
+            <div class="stat-card-sub">Live brand collections</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">PENDING FULFILLMENT</span>
+            <div id="statPendingOrders" class="stat-card-val" style="color: var(--brown-deep);">0</div>
+            <div class="stat-card-sub">Received or in transit</div>
+          </div>
+        </div>
+
+        <!-- Recent Orders Panel -->
+        <div class="dash-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">RECENT COMMISSIONS</h2>
+            <button type="button" class="btn btn-gold-outline-dark" onclick="document.querySelector('[data-section=paneAdminOrders]').click();" style="padding: 6px 14px; font-size: 0.74rem;">
+              VIEW ALL COMMISSIONS
+            </button>
+          </div>
+          <div id="overviewRecentOrdersTable">
+            <div class="loading-state">Loading recent orders...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: ORDERS -->
+      <section id="paneAdminOrders" class="dash-section-pane" style="display: none;">
+        <div class="dashboard-header">
+          <span class="dash-tag">CLIENT COMMISSION MANAGEMENT</span>
+          <h1 class="dash-title">ORDER MANAGEMENT</h1>
+          <p class="dash-subtitle">Update order progression directly into the database to synchronize customer trackers.</p>
+        </div>
+
+        <div class="dash-panel">
+          <div id="adminOrdersTableContainer">
+            <div class="loading-state">Loading atelier commissions...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: RENTALS -->
+      <section id="paneAdminRentals" class="dash-section-pane" style="display: none;">
+        <div class="dashboard-header">
+          <span class="dash-tag">ATELIER RENTAL CONCIERGE &amp; OPERATIONS</span>
+          <h1 class="dash-title">DRESS RENTAL MANAGEMENT</h1>
+          <p class="dash-subtitle">Real-time schedule of couture garment loans, security deposits held, return status, and inspection refunds.</p>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-card-label">ACTIVE &amp; RESERVED</span>
+            <div id="adminRentalStatActive" class="stat-card-val">0</div>
+            <div class="stat-card-sub">Active pieces on loan</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">RETURN PENDING</span>
+            <div id="adminRentalStatPending" class="stat-card-val" style="color: #1D4ED8;">0</div>
+            <div class="stat-card-sub">Awaiting atelier check-in</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">OVERDUE PIECES</span>
+            <div id="adminRentalStatOverdue" class="stat-card-val" style="color: #991B1B;">0</div>
+            <div class="stat-card-sub">Past return deadline</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">HELD SECURITY DEPOSITS</span>
+            <div id="adminRentalStatDeposits" class="stat-card-val" style="color: var(--gold-dark);">₹ 0</div>
+            <div class="stat-card-sub">In escrow for inspection</div>
+          </div>
+        </div>
+
+        <!-- Rentals Table Panel -->
+        <div class="dash-panel">
+          <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+            <h2 class="panel-title">RENTAL RESERVATIONS</h2>
+            <div id="adminRentalFilterTabs" style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-gold admin-rental-filter-btn active" data-filter="ALL" style="padding: 6px 14px; font-size: 0.72rem;">ALL</button>
+              <button type="button" class="btn btn-gold-outline-dark admin-rental-filter-btn" data-filter="RESERVED" style="padding: 6px 14px; font-size: 0.72rem;">RESERVED</button>
+              <button type="button" class="btn btn-gold-outline-dark admin-rental-filter-btn" data-filter="ACTIVE" style="padding: 6px 14px; font-size: 0.72rem;">ACTIVE</button>
+              <button type="button" class="btn btn-gold-outline-dark admin-rental-filter-btn" data-filter="RETURN_PENDING" style="padding: 6px 14px; font-size: 0.72rem;">RETURN PENDING</button>
+              <button type="button" class="btn btn-gold-outline-dark admin-rental-filter-btn" data-filter="OVERDUE" style="padding: 6px 14px; font-size: 0.72rem;">OVERDUE</button>
+              <button type="button" class="btn btn-gold-outline-dark admin-rental-filter-btn" data-filter="RETURNED" style="padding: 6px 14px; font-size: 0.72rem;">RETURNED</button>
+            </div>
+          </div>
+
+          <div id="adminRentalsTableContainer">
+            <div class="loading-state">Loading rental reservations...</div>
+          </div>
+        </div>
+
+        <!-- Availability Calendar Lookup Panel -->
+        <div class="dash-panel">
+          <div class="panel-header" style="flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2 class="panel-title">AVAILABILITY CALENDAR MATRIX</h2>
+              <p style="font-size: 0.8rem; color: var(--text-brown); margin-top: 4px;">Inspect day-by-day availability and overlapping bookings for any rentable piece.</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <select id="adminCalendarProductSelect" class="form-input" style="padding: 6px 12px; font-size: 0.8rem; min-width: 180px;">
+                <option value="">Select Rentable Garment</option>
+              </select>
+              <button type="button" id="adminCalendarRefreshBtn" class="btn btn-gold-outline-dark" style="padding: 6px 14px; font-size: 0.74rem;">
+                VIEW SCHEDULE
+              </button>
+            </div>
+          </div>
+          <div id="adminRentalCalendarContainer" style="padding: 10px 0;">
+            <p style="font-size: 0.84rem; color: var(--text-brown); font-style: italic;">Select a garment above to display its monthly booking matrix.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: PRODUCTS -->
+      <section id="paneAdminProducts" class="dash-section-pane" style="display: none;">
+        <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <span class="dash-tag">ATELIER CATALOGUE</span>
+            <h1 class="dash-title">PRODUCT MANAGEMENT</h1>
+            <p class="dash-subtitle">Add, modify inventory, and control active status of bespoke garments.</p>
+          </div>
+          <button type="button" id="openAddProductModalBtn" class="btn btn-gold" style="padding: 12px 24px; font-size: 0.8rem;">
+            + ADD ATELIER PIECE
+          </button>
+        </div>
+
+        <div class="dash-panel">
+          <div id="adminProductsTableContainer">
+            <div class="loading-state">Loading products vault...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: COLLECTIONS -->
+      <section id="paneAdminCollections" class="dash-section-pane" style="display: none;">
+        <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <span class="dash-tag">CURATED THEMES</span>
+            <h1 class="dash-title">COLLECTION MANAGEMENT</h1>
+            <p class="dash-subtitle">Group atelier garments into signature seasonal edits and bridal stories.</p>
+          </div>
+          <button type="button" id="openAddCollectionModalBtn" class="btn btn-gold" style="padding: 12px 24px; font-size: 0.8rem;">
+            + CREATE COLLECTION
+          </button>
+        </div>
+
+        <div class="dash-panel">
+          <div id="adminCollectionsTableContainer">
+            <div class="loading-state">Loading collections...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: CUSTOMERS -->
+      <section id="paneAdminCustomers" class="dash-section-pane" style="display: none;">
+        <div class="dashboard-header">
+          <span class="dash-tag">PATRON ROSTER</span>
+          <h1 class="dash-title">REGISTERED PATRONS</h1>
+          <p class="dash-subtitle">Private clientele registered with the House of Shubhanshi.</p>
+        </div>
+
+        <div class="dash-panel">
+          <div id="adminCustomersTableContainer">
+            <div class="loading-state">Loading clientele roster...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: SALES ANALYTICS -->
+      <section id="paneAdminSales" class="dash-section-pane" style="display: none;">
+        <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <span class="dash-tag">ATELIER PERFORMANCE</span>
+            <h1 class="dash-title">SALES ANALYTICS</h1>
+            <p class="dash-subtitle">Comprehensive financial metrics calculated from actual database commissions.</p>
+          </div>
+
+          <div class="filter-btn-group">
+            <button type="button" class="filter-btn" data-range="today">Today</button>
+            <button type="button" class="filter-btn" data-range="7d">7 Days</button>
+            <button type="button" class="filter-btn active" data-range="30d">30 Days</button>
+            <button type="button" class="filter-btn" data-range="year">This Year</button>
+            <button type="button" class="filter-btn" data-range="all">All Time</button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-card-label">TOTAL REVENUE</span>
+            <div id="analyticsRevenue" class="stat-card-val">₹ 0</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">ORDERS PLACED</span>
+            <div id="analyticsOrders" class="stat-card-val">0</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">AVERAGE ORDER VALUE</span>
+            <div id="analyticsAov" class="stat-card-val">₹ 0</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-label">PRODUCTS SOLD</span>
+            <div id="analyticsUnits" class="stat-card-val">0</div>
+          </div>
+        </div>
+
+        <div class="dash-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">SALES OVER TIME</h2>
+          </div>
+          <div id="salesTimelineChart">
+            <div class="loading-state">Generating sales timeline...</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ADD PRODUCT -->
+  <div id="addProductModal" class="dash-modal-backdrop">
+    <div class="dash-modal-card">
+      <button type="button" class="dash-modal-close">&times;</button>
+      <div class="section-header" style="margin-bottom: 20px;">
+        <span class="section-tag">NEW CREATION</span>
+        <h3 class="font-serif" style="font-size: 1.8rem; color: var(--brown-dark);">ADD ATELIER PIECE</h3>
+        <div class="gold-divider"><span class="gold-divider-diamond"></span></div>
+      </div>
+
+      <form id="addProductForm" style="display:flex; flex-direction:column; gap:14px;">
+        <div class="form-group">
+          <label class="form-label">Garment Name *</label>
+          <input type="text" name="name" class="form-input" placeholder="e.g. The Chandni Lehenga" required>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Price (₹) *</label>
+            <input type="number" name="price" class="form-input" placeholder="54000" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Initial Stock</label>
+            <input type="number" name="stock" class="form-input" value="10">
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <input type="text" name="category" class="form-input" placeholder="e.g. RAW SILK COUTURE">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Collection</label>
+            <select name="collectionId" class="form-input">
+              <option value="">Select Collection</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+          <div class="form-group">
+            <label class="form-label">Fabric</label>
+            <input type="text" name="fabric" class="form-input" placeholder="Mulberry Silk">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Color</label>
+            <input type="text" name="color" class="form-input" placeholder="Terracotta">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sizes</label>
+            <input type="text" name="size" class="form-input" placeholder="S, M, L, Bespoke">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Image Path</label>
+          <input type="text" name="image" class="form-input" value="assets/images/collection/noor-set.jpg">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea name="description" class="form-input" rows="3" placeholder="Describe the karigari, embroidery and silhouette..."></textarea>
+        </div>
+
+        <!-- ATELIER DRESS RENTAL CONFIGURATION -->
+        <div style="background: rgba(248, 243, 234, 0.6); border: 1px solid var(--gold-border); padding: 14px; margin-top: 4px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.84rem; font-weight: 600; color: var(--brown-dark);">
+            <input type="checkbox" name="isRentable" id="prodFormIsRentable" style="accent-color: var(--gold); width: 16px; height: 16px;">
+            <span>ENABLE DRESS RENTAL FOR THIS PIECE</span>
+          </label>
+
+          <div id="prodRentalFieldsWrap" style="display: none; margin-top: 12px; border-top: 1px dashed rgba(201, 160, 74, 0.4); padding-top: 12px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+              <div class="form-group">
+                <label class="form-label">Base Rental Price (₹) *</label>
+                <input type="number" name="rentalBasePrice" class="form-input" placeholder="4500" value="4500">
+                <small style="color:var(--text-brown); font-size: 0.7rem;">Covers Day 1 hire fee</small>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Price Per Day (₹) *</label>
+                <input type="number" name="rentalPricePerDay" class="form-input" placeholder="1200" value="1200">
+                <small style="color:var(--text-brown); font-size: 0.7rem;">Billed for Days 2 to 7</small>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top: 8px;">
+              <div class="form-group">
+                <label class="form-label">Security Deposit (₹) *</label>
+                <input type="number" name="rentalDeposit" class="form-input" placeholder="10000" value="10000">
+                <small style="color:var(--text-brown); font-size: 0.7rem;">100% refundable upon return</small>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Rental Inventory Units *</label>
+                <input type="number" name="rentalAvailableStock" class="form-input" placeholder="2" value="2">
+                <small style="color:var(--text-brown); font-size: 0.7rem;">Pieces dedicated to rentals</small>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top: 8px;">
+              <div class="form-group">
+                <label class="form-label">Min Rental Days</label>
+                <input type="number" name="minimumRentalDays" class="form-input" value="1" min="1" max="7">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Max Rental Days</label>
+                <input type="number" name="maximumRentalDays" class="form-input" value="7" min="1" max="7">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-gold" style="margin-top:10px; padding:14px;">
+          CREATE ATELIER PIECE
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD COLLECTION -->
+  <div id="addCollectionModal" class="dash-modal-backdrop">
+    <div class="dash-modal-card">
+      <button type="button" class="dash-modal-close">&times;</button>
+      <div class="section-header" style="margin-bottom: 20px;">
+        <span class="section-tag">CURATED EDIT</span>
+        <h3 class="font-serif" style="font-size: 1.8rem; color: var(--brown-dark);">CREATE COLLECTION</h3>
+        <div class="gold-divider"><span class="gold-divider-diamond"></span></div>
+      </div>
+
+      <form id="addCollectionForm" style="display:flex; flex-direction:column; gap:14px;">
+        <div class="form-group">
+          <label class="form-label">Collection Name *</label>
+          <input type="text" name="name" class="form-input" placeholder="e.g. THE ROYAL EDIT" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea name="description" class="form-input" rows="3" placeholder="Theme and aesthetic story..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Featured Image Path</label>
+          <input type="text" name="image" class="form-input" value="assets/images/collection/shubh-lehenga.jpg">
+        </div>
+        <button type="submit" class="btn btn-gold" style="margin-top:10px; padding:14px;">
+          CREATE COLLECTION
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: RETURN PROCESSING & SECURITY DEPOSIT SETTLEMENT -->
+  <div id="adminReturnModal" class="dash-modal-backdrop">
+    <div class="dash-modal-card" style="max-width: 580px;">
+      <button type="button" class="dash-modal-close">&times;</button>
+      <div class="section-header" style="margin-bottom: 18px;">
+        <span class="section-tag">INSPECTION &amp; SETTLEMENT</span>
+        <h3 class="font-serif" style="font-size: 1.6rem; color: var(--brown-dark);">PROCESS GARMENT RETURN</h3>
+        <div class="gold-divider"><span class="gold-divider-diamond"></span></div>
+      </div>
+
+      <form id="adminReturnForm" style="display:flex; flex-direction:column; gap:14px;">
+        <input type="hidden" name="rentalId" id="retRentalId">
+
+        <div style="background: var(--ivory); border-left: 3px solid var(--gold); padding: 12px 16px; font-size: 0.84rem;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="color:var(--text-brown);">Garment:</span>
+            <strong id="retProductName" style="color:var(--brown-dark);">-</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="color:var(--text-brown);">Patron:</span>
+            <strong id="retUserName" style="color:var(--brown-dark);">-</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-brown);">Held Security Deposit:</span>
+            <strong id="retSecurityDeposit" style="color:var(--gold-dark); font-size: 0.94rem;">₹ 0</strong>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Damage Assessment (₹)</label>
+            <input type="number" name="damageAmount" id="retDamageAmount" class="form-input" value="0" min="0">
+            <small style="color:var(--text-brown); font-size: 0.7rem;">Enter ₹0 if returned pristine</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Late Fee (₹)</label>
+            <input type="number" name="lateFee" id="retLateFee" class="form-input" value="0" min="0">
+            <small style="color:var(--text-brown); font-size: 0.7rem;">Enter ₹0 if returned on time</small>
+          </div>
+        </div>
+
+        <!-- Real-time Refund Preview -->
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 14px; text-align: center;">
+          <span style="font-size: 0.72rem; letter-spacing: 0.12em; color: #065F46; text-transform: uppercase; font-weight:600; display:block;">Calculated Patron Refund</span>
+          <div id="retCalculatedRefund" style="font-size: 1.6rem; font-weight: 700; color: #065F46; margin: 4px 0;">₹ 0</div>
+          <small id="retDepositStatusNote" style="color: #065F46; font-size: 0.76rem;">Full security deposit will be refunded</small>
+        </div>
+
+        <button type="submit" class="btn btn-gold" style="margin-top:8px; padding:14px;">
+          CONFIRM RETURN &amp; RELEASE DEPOSIT REFUND
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Site Footer -->
+  <footer class="site-footer" id="contact">
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2026 HOUSE OF SHUBHANSHI. ALL RIGHTS RESERVED &bull; ATELIER MANAGEMENT</p>
+        <span class="footer-bottom-statement">WEAR THE DREAM &bull; HANDCRAFTED IN INDIA</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/admin-dashboard.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

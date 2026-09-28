@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 220" width="100%" height="100%">
+  <defs>
+    <!-- Antique Metallic Gold Gradients -->
+    <linearGradient id="antiqueGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C9A04A" />
+      <stop offset="25%" stop-color="#E8D18D" />
+      <stop offset="50%" stop-color="#C9A04A" />
+      <stop offset="75%" stop-color="#F2DFAB" />
+      <stop offset="100%" stop-color="#9C7328" />
+    </linearGradient>
+
+    <linearGradient id="goldHorizontal" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(201, 160, 74, 0)" />
+      <stop offset="20%" stop-color="#C9A04A" />
+      <stop offset="50%" stop-color="#F2DFAB" />
+      <stop offset="80%" stop-color="#C9A04A" />
+      <stop offset="100%" stop-color="rgba(201, 160, 74, 0)" />
+    </linearGradient>
+
+    <linearGradient id="goldRadial" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#F5E4B8" />
+      <stop offset="60%" stop-color="#C9A04A" />
+      <stop offset="100%" stop-color="#8A601E" />
+    </linearGradient>
+
+    <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Deep Warm Brown / Terracotta Background with Subtle Inset Border -->
+  <rect width="600" height="220" rx="8" fill="#7A321D" />
+  <rect x="8" y="8" width="584" height="204" rx="4" fill="none" stroke="url(#antiqueGold)" stroke-width="0.8" stroke-opacity="0.35" />
+  <rect x="12" y="12" width="576" height="196" rx="2" fill="none" stroke="url(#antiqueGold)" stroke-width="0.4" stroke-opacity="0.2" />
+
+  <!-- Corner Filigree Accents -->
+  <g stroke="url(#antiqueGold)" stroke-width="0.75" fill="none" opacity="0.6">
+    <path d="M 16 26 L 26 26 L 26 16" />
+    <path d="M 584 26 L 574 26 L 574 16" />
+    <path d="M 16 194 L 26 194 L 26 204" />
+    <path d="M 584 194 L 574 194 L 574 204" />
+    <circle cx="26" cy="26" r="1.5" fill="url(#antiqueGold)" />
+    <circle cx="574" cy="26" r="1.5" fill="url(#antiqueGold)" />
+    <circle cx="26" cy="194" r="1.5" fill="url(#antiqueGold)" />
+    <circle cx="574" cy="194" r="1.5" fill="url(#antiqueGold)" />
+  </g>
+
+  <!-- Central Crest / Monogram Insignia -->
+  <g transform="translate(300, 52)">
+    <!-- Heritage Arch & Lotus Finial Motif -->
+    <path d="M -28 18 C -28 -8, 28 -8, 28 18" fill="none" stroke="url(#antiqueGold)" stroke-width="1" opacity="0.7" />
+    <path d="M -18 18 C -18 2, 18 2, 18 18" fill="none" stroke="url(#antiqueGold)" stroke-width="0.7" opacity="0.5" />
+    
+    <!-- Royal Diamond Top Finial -->
+    <polygon points="0,-16 4,-10 0,-4 -4,-10" fill="url(#antiqueGold)" />
+    <circle cx="0" cy="-20" r="1.8" fill="#F2DFAB" />
+    <circle cx="-10" cy="-8" r="1.2" fill="url(#antiqueGold)" />
+    <circle cx="10" cy="-8" r="1.2" fill="url(#antiqueGold)" />
+
+    <!-- Stylized Heritage 'H S' Monogram Motif -->
+    <!-- Letter H -->
+    <path d="M -11 -2 L -11 16 M -11 7 L -4 7 M -4 -2 L -4 16" fill="none" stroke="url(#goldRadial)" stroke-width="1.8" stroke-linecap="round" />
+    <!-- Letter S Intertwined -->
+    <path d="M 12 0 C 7 -2, 3 3, 7 7 C 12 11, 10 17, 3 16" fill="none" stroke="url(#antiqueGold)" stroke-width="1.8" stroke-linecap="round" />
+  </g>
+
+  <!-- Upper Delicate Decorative Divider -->
+  <line x1="120" y1="88" x2="480" y2="88" stroke="url(#goldHorizontal)" stroke-width="1" />
+  <polygon points="300,86 303,88 300,90 297,88" fill="url(#antiqueGold)" />
+  <circle cx="260" cy="88" r="1.2" fill="url(#antiqueGold)" opacity="0.7" />
+  <circle cx="340" cy="88" r="1.2" fill="url(#antiqueGold)" opacity="0.7" />
+
+  <!-- Main Luxury Brand Heading: HOUSE OF SHUBHANSHI -->
+  <text x="300" y="128" 
+        text-anchor="middle" 
+        font-family="'Cormorant Garamond', 'Playfair Display', 'Cinzel', 'Georgia', serif" 
+        font-size="28" 
+        font-weight="500" 
+        letter-spacing="5.5" 
+        fill="url(#antiqueGold)" 
+        filter="url(#goldGlow)">
+    HOUSE OF SHUBHANSHI
+  </text>
+
+  <!-- Lower Delicate Gold Divider with Arch Motif -->
+  <line x1="180" y1="146" x2="420" y2="146" stroke="url(#goldHorizontal)" stroke-width="0.8" />
+  <circle cx="300" cy="146" r="1.6" fill="url(#antiqueGold)" />
+
+  <!-- Brand Tagline: WEAR THE DREAM -->
+  <text x="300" y="172" 
+        text-anchor="middle" 
+        font-family="'Montserrat', 'Manrope', 'Helvetica Neue', sans-serif" 
+        font-size="11" 
+        font-weight="400" 
+        letter-spacing="7" 
+        fill="#E8D18D" 
+        opacity="0.95">
+    WEAR THE DREAM
+  </text>
+  
+  <text x="210" y="171" font-size="7" fill="url(#antiqueGold)" opacity="0.7">✦</text>
+  <text x="390" y="171" font-size="7" fill="url(#antiqueGold)" opacity="0.7">✦</text>
+</svg>
