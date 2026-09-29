@@ -34,12 +34,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Static Files: Serve Frontend directly from /frontend
-const frontendDir = path.resolve(__dirname, '../../frontend');
-app.use(express.static(frontendDir));
-
-// Also serve /assets directly from frontend/assets
-app.use('/assets', express.static(path.join(frontendDir, 'assets')));
+// Static Files: Serve Frontend public assets (images, videos, logo, etc.)
+const frontendPublicDir = path.resolve(__dirname, '../../frontend/public');
+app.use(express.static(frontendPublicDir));
+app.use('/assets', express.static(path.join(frontendPublicDir, 'assets')));
+app.use('/images', express.static(path.join(frontendPublicDir, 'images')));
+app.use('/videos', express.static(path.join(frontendPublicDir, 'videos')));
+app.use('/logo', express.static(path.join(frontendPublicDir, 'logo')));
+app.use('/icons', express.static(path.join(frontendPublicDir, 'icons')));
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -68,12 +70,71 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Fallback HTML routing for clean URLs if requested without .html
+// Root & Page Redirection to Next.js Frontend (Port 3000)
+app.get('/', (req, res) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=${frontendUrl}/" />
+  <title>House of Shubhanshi</title>
+  <style>
+    body {
+      background: #3B1D14;
+      color: #FDFBF7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    .card {
+      border: 1px solid rgba(201, 160, 74, 0.4);
+      padding: 40px;
+      max-width: 520px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    h1 { color: #C9A04A; font-family: serif; margin-bottom: 8px; font-size: 26px; }
+    p { line-height: 1.6; color: #E8D8C8; font-size: 15px; margin: 12px 0; }
+    a.btn {
+      display: inline-block;
+      margin-top: 18px;
+      padding: 12px 28px;
+      background: #C9A04A;
+      color: #3B1D14;
+      text-decoration: none;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 13px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="display:inline-block;padding:4px 12px;background:rgba(201,160,74,0.15);color:#C9A04A;border:1px solid #C9A04A;border-radius:20px;font-size:12px;margin-bottom:16px;">
+      Backend API & Database Active (Port 3001)
+    </div>
+    <h1>House of Shubhanshi</h1>
+    <p>The backend API server and PostgreSQL database are online.</p>
+    <p>Redirecting to the Next.js luxury storefront at <a href="${frontendUrl}" style="color: #C9A04A;">${frontendUrl}</a>...</p>
+    <a class="btn" href="${frontendUrl}">Open Storefront</a>
+    <script>window.location.replace("${frontendUrl}");</script>
+  </div>
+</body>
+</html>`);
+});
+
 app.get('/:page', (req, res, next) => {
-  const pageFile = path.join(frontendDir, `${req.params.page}.html`);
-  res.sendFile(pageFile, (err) => {
-    if (err) next();
-  });
+  if (req.params.page.startsWith('api')) return next();
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  return res.redirect(`${frontendUrl}/${req.params.page}`);
 });
 
 // Global Centralized Error Handler (Clean JSON, no leaked credentials/stacks)
@@ -99,12 +160,14 @@ Please verify your PostgreSQL service or DATABASE_URL.
   // 2. Start Express Application
   const server = app.listen(portToUse, () => {
     console.log(`
-House of Shubhanshi
-Server running on:
-http://localhost:${portToUse}
-
-Database:
-Connected
+\x1b[38;2;201;160;74m==================================================
+ HOUSE OF SHUBHANSHI — LUXURY ATELIER & STOREFRONT
+==================================================\x1b[0m
+  \x1b[1mBackend API:\x1b[0m     http://localhost:${portToUse}
+  \x1b[1mFrontend UI:\x1b[0m     http://localhost:3000
+  \x1b[1mHealth Check:\x1b[0m    http://localhost:${portToUse}/api/health
+  \x1b[1mDatabase:\x1b[0m        Connected (PostgreSQL)
+\x1b[38;2;201;160;74m==================================================\x1b[0m
     `);
   });
 
@@ -114,12 +177,14 @@ Connected
       const nextPort = Number(portToUse) + 1;
       const fallbackServer = app.listen(nextPort, () => {
         console.log(`
-House of Shubhanshi
-Server running on:
-http://localhost:${nextPort}
-
-Database:
-Connected
+\x1b[38;2;201;160;74m==================================================
+ HOUSE OF SHUBHANSHI — LUXURY ATELIER & STOREFRONT
+==================================================\x1b[0m
+  \x1b[1mBackend API:\x1b[0m     http://localhost:${nextPort}
+  \x1b[1mFrontend UI:\x1b[0m     http://localhost:3000
+  \x1b[1mHealth Check:\x1b[0m    http://localhost:${nextPort}/api/health
+  \x1b[1mDatabase:\x1b[0m        Connected (PostgreSQL)
+\x1b[38;2;201;160;74m==================================================\x1b[0m
         `);
       });
       fallbackServer.on('error', (fErr) => {

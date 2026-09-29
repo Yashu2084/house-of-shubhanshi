@@ -5,13 +5,14 @@
   "main": "backend/src/server.js",
   "scripts": {
     "start": "node backend/src/server.js",
-    "dev": "node --watch backend/src/server.js",
+    "dev": "concurrently -k -n \"backend,frontend\" -c \"yellow,cyan\" \"npm run backend:dev\" \"npm run frontend:dev\"",
+    "backend:dev": "node --watch backend/src/server.js",
+    "backend:start": "node backend/src/server.js",
     "frontend:dev": "npm --prefix frontend run dev",
     "frontend:build": "npm --prefix frontend run build",
     "frontend:start": "npm --prefix frontend run start",
     "db:init": "node backend/src/config/initDb.js",
     "seed": "node backend/src/config/initDb.js"
-
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.14",
@@ -23,5 +24,8 @@
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.1",
     "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
   }
 }
