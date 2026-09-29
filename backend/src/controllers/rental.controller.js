@@ -36,9 +36,14 @@ async function calculatePrice(req, res, next) {
  */
 async function checkAvailability(req, res, next) {
   try {
-    const { productId, startDate, days, quantity } = req.query;
+    const params = { ...req.query, ...req.body };
+    const productId = params.productId;
+    const startDate = params.startDate;
+    const days = params.rentalDays || params.days;
+    const quantity = params.quantity || 1;
+
     if (!productId || !startDate || !days) {
-      const error = new Error('productId, startDate and days are required query parameters');
+      const error = new Error('productId, startDate and days/rentalDays are required parameters');
       error.statusCode = 400;
       throw error;
     }

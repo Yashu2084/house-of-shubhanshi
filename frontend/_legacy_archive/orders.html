@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Status Tracker — House of Shubhanshi</title>
+  <link rel="icon" type="image/svg+xml" href="assets/logo/house-of-shubhanshi-logo.svg">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body style="background-color: var(--ivory); color: var(--brown-dark);">
+
+  <!-- Header -->
+  <header class="site-header scrolled" id="siteHeader">
+    <div class="container">
+      <div class="header-inner">
+        <nav class="nav-group nav-left" aria-label="Primary Left Navigation">
+          <a href="about.html" class="nav-link">ABOUT</a>
+          <a href="shop.html" class="nav-link">SHOP</a>
+        </nav>
+
+        <div class="header-logo-container">
+          <a href="index.html" class="brand-logo-link" aria-label="House of Shubhanshi Home">
+            <img src="assets/logo/house-of-shubhanshi-logo.png" 
+                 onerror="this.onerror=null; this.src='assets/logo/house-of-shubhanshi-logo.svg'" 
+                 alt="House of Shubhanshi" 
+                 class="brand-logo-img">
+          </a>
+        </div>
+
+        <nav class="nav-group nav-right" aria-label="Primary Right Navigation">
+          <a href="customer-dashboard.html" class="nav-link">MY ACCOUNT</a>
+          <a href="cart.html" class="nav-link cart-link" aria-label="Shopping Bag">
+            CART <span class="cart-count">0</span>
+          </a>
+          <button type="button" id="headerOrderLogout" class="nav-link nav-logout-btn" aria-label="Sign Out">
+            LOGOUT
+          </button>
+        </nav>
+
+        <button class="mobile-toggle" aria-label="Open navigation menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer -->
+  <aside class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+    <nav class="mobile-drawer-nav">
+      <a href="index.html" class="mobile-drawer-link">HOME</a>
+      <a href="about.html" class="mobile-drawer-link">ABOUT</a>
+      <a href="shop.html" class="mobile-drawer-link">SHOP</a>
+      <a href="customer-dashboard.html" class="mobile-drawer-link">MY ACCOUNT</a>
+      <a href="cart.html" class="mobile-drawer-link">CART (<span class="cart-count">0</span>)</a>
+      <a href="#" id="mobileLogoutBtn" class="mobile-drawer-link">LOGOUT</a>
+    </nav>
+    <div class="mobile-drawer-footer">
+      <p class="font-serif">HOUSE OF SHUBHANSHI</p>
+      <span class="gold-divider-diamond" style="display:inline-block; margin: 8px auto;"></span>
+      <p>WEAR THE DREAM</p>
+    </div>
+  </aside>
+
+  <!-- Main Experience -->
+  <main style="padding-top: 130px; min-height: 80vh; padding-bottom: 80px;">
+    <div class="container-narrow">
+      
+      <div class="section-header" style="margin-top: 20px; margin-bottom: 40px;">
+        <span class="section-tag">ATELIER FULFILLMENT &amp; LOGISTICS</span>
+        <h1 class="section-title">YOUR BESPOKE ORDERS</h1>
+        <div class="gold-divider"><span class="gold-divider-diamond"></span></div>
+        <p class="section-subtitle">
+          "Every stitch is tracked with unhurried reverence from our master karigars to your doorstep."
+        </p>
+      </div>
+
+      <!-- Orders Content Container (Populated by orders.js) -->
+      <div id="ordersListContainer">
+        <!-- Rendered by js/orders.js -->
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer" id="contact">
+    <div class="container">
+      <div class="footer-top-grid">
+        <div class="footer-brand">
+          <img src="assets/logo/house-of-shubhanshi-logo.png" 
+               onerror="this.onerror=null; this.src='assets/logo/house-of-shubhanshi-logo.svg'" 
+               alt="House of Shubhanshi" 
+               class="footer-logo-img">
+          <h3 class="footer-brand-title">HOUSE OF SHUBHANSHI</h3>
+          <span class="footer-brand-tagline">✦ WEAR THE DREAM ✦</span>
+          <p class="footer-brand-desc">
+            "Rooted in Indian craftsmanship, created for the modern dreamer."
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h4 class="footer-col-title">QUICK LINKS</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About The House</a></li>
+            <li><a href="shop.html">The Collection</a></li>
+            <li><a href="cart.html">Bespoke Bag</a></li>
+            <li><a href="customer-dashboard.html">My Account</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4 class="footer-col-title">ATELIER CONTACT</h4>
+          <div class="footer-contact-item">
+            <span class="footer-contact-label">CONCIERGE</span>
+            <a href="tel:+919560011351" class="footer-contact-link">+91 9560011351</a>
+          </div>
+          <div class="footer-contact-item">
+            <span class="footer-contact-label">EMAIL</span>
+            <a href="mailto:Houseofshubhanshi@gmail.com" class="footer-contact-link">Houseofshubhanshi@gmail.com</a>
+          </div>
+          <p class="footer-contact-note">Bespoke Orders &bull; Private Salons</p>
+        </div>
+
+        <div class="footer-col">
+          <h4 class="footer-col-title">JOIN THE HOUSE</h4>
+          <p class="footer-newsletter-text">
+            For personal sizing consultations and bespoke tailoring appointments.
+          </p>
+          <a href="https://wa.me/919560011351" target="_blank" rel="noopener noreferrer" class="btn btn-gold-outline" style="margin-top: 12px; display:inline-block;">
+            TALK TO CONCIERGE
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 HOUSE OF SHUBHANSHI. ALL RIGHTS RESERVED.</p>
+        <span class="footer-bottom-statement">WEAR THE DREAM &bull; HANDCRAFTED IN INDIA</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/orders.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -10,7 +10,11 @@ const { requireAuth, requireAdmin } = require('../middleware/auth');
 router.get('/calculate-price', rentalController.calculatePrice);
 router.get('/price', rentalController.calculatePrice);
 router.get('/availability', rentalController.checkAvailability);
+router.post('/availability', rentalController.checkAvailability);
+router.get('/check-availability', rentalController.checkAvailability);
+router.post('/check-availability', rentalController.checkAvailability);
 router.get('/calendar/:productId', rentalController.getCalendar);
+
 
 // Customer endpoints (requireAuth)
 router.get('/my-rentals', requireAuth, rentalController.getCustomerRentals);
