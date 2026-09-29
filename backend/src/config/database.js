@@ -319,14 +319,14 @@ async function migrateRentals(executor) {
   const q = (text, params) => executor.query(text, params);
 
   try {
-    // 1. Configure rental parameters for signature atelier pieces
+    // 1. Configure rental parameters for signature atelier pieces (allowing custom rentals up to 30 days)
     await q(`
       UPDATE products 
       SET is_rentable = true, 
           rental_base_price = 4500, 
           rental_price_per_day = 1200, 
           minimum_rental_days = 1, 
-          maximum_rental_days = 7, 
+          maximum_rental_days = 30, 
           rental_deposit = 10000, 
           rental_available_stock = 3
       WHERE id = 'prod_01' AND (rental_base_price IS NULL OR rental_base_price = 0)
@@ -338,7 +338,7 @@ async function migrateRentals(executor) {
           rental_base_price = 8500, 
           rental_price_per_day = 2500, 
           minimum_rental_days = 2, 
-          maximum_rental_days = 7, 
+          maximum_rental_days = 30, 
           rental_deposit = 20000, 
           rental_available_stock = 2
       WHERE id = 'prod_02' AND (rental_base_price IS NULL OR rental_base_price = 0)
@@ -350,10 +350,16 @@ async function migrateRentals(executor) {
           rental_base_price = 3500, 
           rental_price_per_day = 900, 
           minimum_rental_days = 1, 
-          maximum_rental_days = 7, 
+          maximum_rental_days = 30, 
           rental_deposit = 8000, 
           rental_available_stock = 4
       WHERE id = 'prod_03' AND (rental_base_price IS NULL OR rental_base_price = 0)
+    `);
+
+    await q(`
+      UPDATE products 
+      SET maximum_rental_days = 30 
+      WHERE maximum_rental_days IS NULL OR maximum_rental_days < 30
     `);
 
     // 2. Check if rentals table has rows; if empty, seed sample rentals for patron Yash Vardhan

@@ -248,7 +248,7 @@ function initSignupForm() {
 
     try {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'CREATING MEMBERSHIP...';
+      submitBtn.textContent = 'CREATING ACCOUNT...';
 
       const res = await fetch(`${API_BASE}/auth/signup`, {
         method: 'POST',
@@ -263,7 +263,8 @@ function initSignupForm() {
         throw new Error(data.message || (data.errors ? Object.values(data.errors).join(', ') : 'Signup failed'));
       }
 
-      showToast(`Welcome to House of Shubhanshi, ${data.data.user.name}.`);
+      const user = (data.data && data.data.user) ? data.data.user : (data.user || { name: 'Member' });
+      showToast(`Welcome to House of Shubhanshi, ${user.name}.`);
       if (alertBox) {
         alertBox.className = 'auth-alert success';
         alertBox.textContent = 'Membership created successfully. Redirecting to your atelier closet...';
@@ -303,6 +304,7 @@ function initLoginForm() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (submitBtn.disabled) return;
     if (alertBox) alertBox.className = 'auth-alert';
 
     const email = form.email.value.trim();
@@ -315,7 +317,7 @@ function initLoginForm() {
 
     try {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'AUTHENTICATING...';
+      submitBtn.textContent = 'SIGNING IN...';
 
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
@@ -330,8 +332,8 @@ function initLoginForm() {
         throw new Error(data.message || 'Login failed');
       }
 
-      const user = data.data.user;
-      showToast(`Welcome back, ${user.name}.`);
+      const user = (data.data && data.data.user) ? data.data.user : (data.user || {});
+      showToast(`Welcome back, ${user.name || 'Member'}.`);
 
       setTimeout(() => {
         if (user.role === 'ADMIN') {

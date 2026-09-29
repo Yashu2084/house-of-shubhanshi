@@ -27,7 +27,11 @@ async function requireAuth(req, res, next) {
   const token = extractToken(req);
 
   if (!token) {
-    return sendError(res, 'Authentication required. Please log in.', 401);
+    return res.status(401).json({
+      success: false,
+      authenticated: false,
+      message: 'Authentication required. Please log in.'
+    });
   }
 
   try {
@@ -37,7 +41,11 @@ async function requireAuth(req, res, next) {
     });
 
     if (!user) {
-      return sendError(res, 'User session invalid or user no longer exists.', 401);
+      return res.status(401).json({
+        success: false,
+        authenticated: false,
+        message: 'User session invalid or user no longer exists.'
+      });
     }
 
     // Exclude passwordHash from req.user
@@ -46,9 +54,17 @@ async function requireAuth(req, res, next) {
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
-      return sendError(res, 'Session expired. Please log in again.', 401);
+      return res.status(401).json({
+        success: false,
+        authenticated: false,
+        message: 'Session expired. Please log in again.'
+      });
     }
-    return sendError(res, 'Invalid authentication token.', 401);
+    return res.status(401).json({
+      success: false,
+      authenticated: false,
+      message: 'Invalid authentication token.'
+    });
   }
 }
 
@@ -57,11 +73,18 @@ async function requireAuth(req, res, next) {
  */
 function requireAdmin(req, res, next) {
   if (!req.user) {
-    return sendError(res, 'Authentication required.', 401);
+    return res.status(401).json({
+      success: false,
+      authenticated: false,
+      message: 'Authentication required.'
+    });
   }
 
-  if (req.user.role !== 'ADMIN') {
-    return sendError(res, 'Forbidden. Administrator privileges required.', 403);
+  if (String(req.user.role).toUpperCase() !== 'ADMIN') {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden. Administrator privileges required.'
+    });
   }
 
   next();

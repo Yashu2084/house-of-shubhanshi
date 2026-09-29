@@ -35,6 +35,83 @@ function updateCartBadges() {
 }
 
 /**
+ * Premium Add-to-Cart Confirmation Popup Modal
+ */
+function showAddToCartPopup(details) {
+  let backdrop = document.getElementById('cartConfirmationModal');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'cartConfirmationModal';
+    backdrop.className = 'cart-popup-backdrop';
+    document.body.appendChild(backdrop);
+  }
+
+  const isRental = !!details.isRental;
+  const headerText = isRental ? 'RENTAL ADDED TO CART' : 'ADDED TO CART';
+  const priceDisplay = isRental 
+    ? `₹${Number(details.rentalPrice).toLocaleString('en-IN')}` 
+    : `₹${Number(details.price).toLocaleString('en-IN')}`;
+  const metaText = isRental 
+    ? `${details.rentalDays} Days • Deposit: ₹${Number(details.securityDeposit || 0).toLocaleString('en-IN')} (Refundable)` 
+    : (details.category || 'Atelier Garment');
+
+  backdrop.innerHTML = `
+    <div class="cart-popup-card" role="dialog" aria-modal="true" aria-labelledby="cartPopupTitle">
+      <button type="button" class="cart-popup-close-x" aria-label="Close confirmation dialog">&times;</button>
+      
+      <div class="cart-popup-header">
+        <span class="cart-popup-check">✓</span>
+        <span id="cartPopupTitle">${headerText}</span>
+      </div>
+
+      <div class="cart-popup-body">
+        <img src="${details.image}" alt="${details.name}" class="cart-popup-thumb">
+        <div class="cart-popup-info">
+          <h4 class="cart-popup-title">${details.name}</h4>
+          <div class="cart-popup-meta">${metaText}</div>
+          <div class="cart-popup-price">${priceDisplay}</div>
+        </div>
+      </div>
+
+      <div class="cart-popup-actions">
+        <a href="cart.html" class="btn btn-gold cart-popup-view-btn">VIEW CART</a>
+        <button type="button" class="btn btn-gold-outline-dark cart-popup-continue-btn">CONTINUE SHOPPING</button>
+      </div>
+    </div>
+  `;
+
+  // Subtle entrance animation
+  requestAnimationFrame(() => {
+    backdrop.classList.add('open');
+  });
+
+  const closePopup = () => {
+    const card = backdrop.querySelector('.cart-popup-card');
+    if (card) card.classList.add('closing');
+    backdrop.classList.remove('open');
+    setTimeout(() => {
+      if (backdrop && backdrop.parentNode) {
+        backdrop.parentNode.removeChild(backdrop);
+      }
+    }, 320);
+  };
+
+  backdrop.querySelector('.cart-popup-close-x')?.addEventListener('click', closePopup);
+  backdrop.querySelector('.cart-popup-continue-btn')?.addEventListener('click', closePopup);
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) closePopup();
+  });
+
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      closePopup();
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+/**
  * Add an item to cart (supports permanent BUY or RENT)
  */
 function addItem(product, quantity = 1, rentalOptions = null) {
@@ -68,9 +145,16 @@ function addItem(product, quantity = 1, rentalOptions = null) {
     });
 
     saveCartItems(items);
-    if (window.HouseAuth?.showToast) {
-      window.HouseAuth.showToast(`"${product.name}" (${rentalOptions.rentalDays}-Day Rental) reserved in your bag.`);
-    }
+    showAddToCartPopup({
+      name: product.name,
+      image: product.image,
+      category: product.category,
+      isRental: true,
+      rentalDays: rentalOptions.rentalDays,
+      rentalPrice: rentalOptions.rentalPrice,
+      securityDeposit: rentalOptions.securityDeposit,
+      price: rentalOptions.totalRentalCost
+    });
   } else {
     const cartItemId = `${product.id}_buy`;
     const existing = items.find(i => (i.cartItemId === cartItemId) || (i.productId === product.id && i.purchaseType !== 'RENT'));
@@ -91,9 +175,13 @@ function addItem(product, quantity = 1, rentalOptions = null) {
     }
 
     saveCartItems(items);
-    if (window.HouseAuth?.showToast) {
-      window.HouseAuth.showToast(`"${product.name}" added to your curated bag.`);
-    }
+    showAddToCartPopup({
+      name: product.name,
+      image: product.image,
+      category: product.category,
+      isRental: false,
+      price: product.price
+    });
   }
 }
 
@@ -185,10 +273,10 @@ async function renderCartPage() {
             const isRental = item.purchaseType === 'RENT';
             const itemId = item.cartItemId || item.productId;
             return `
-              <div style="display: flex; gap: 18px; align-items: flex-start; border-bottom: 1px solid rgba(122, 50, 29, 0.08); padding-bottom: 18px;">
-                <img src="${item.image}" alt="${item.name}" style="width: 76px; height: 98px; object-fit: cover; border: 1px solid var(--gold-border); flex-shrink: 0;">
+              <div class="cart-item-row" data-id="${itemId}">
+                <img src="${item.image}" alt="${item.name}" class="cart-item-thumb">
                 
-                <div style="flex: 1;">
+                <div class="cart-item-info">
                   <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                     <span style="font-size: 0.68rem; letter-spacing: 0.16em; color: var(--gold); text-transform: uppercase;">${item.category || 'ATELIER PIECE'}</span>
                     ${isRental ? `<span class="badge-status badge-status-reserved" style="font-size: 0.62rem; padding: 2px 6px;">RENTAL • ${item.rentalDays} DAYS</span>` : `<span class="badge-status badge-status-active" style="font-size: 0.62rem; padding: 2px 6px;">PURCHASE</span>`}
@@ -197,11 +285,11 @@ async function renderCartPage() {
                   <h3 class="font-serif" style="font-size: 1.15rem; color: var(--brown-dark); margin: 4px 0 4px;">${item.name}</h3>
 
                   ${isRental ? `
-                    <div style="font-size: 0.78rem; color: var(--text-brown); margin-bottom: 6px; background: var(--ivory); padding: 4px 8px; border-left: 2px solid var(--gold);">
+                    <div style="font-size: 0.78rem; color: var(--text-brown); margin-bottom: 6px; background: var(--ivory); padding: 6px 10px; border-left: 2px solid var(--gold);">
                       Dates: <strong>${item.rentalStartDate}</strong> &rarr; <strong>${item.rentalEndDate}</strong> (${item.rentalDays} Days)
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 2px;">
-                      <div style="font-size: 0.92rem; font-weight: 600; color: var(--brown-deep);">
+                      <div style="font-size: 0.95rem; font-weight: 600; color: var(--brown-deep);">
                         Hire Fee: ₹${Number(item.rentalPrice).toLocaleString('en-IN')}
                       </div>
                       <div style="font-size: 0.76rem; color: var(--gold-dark); font-weight: 600;">
@@ -209,23 +297,25 @@ async function renderCartPage() {
                       </div>
                     </div>
                   ` : `
-                    <div style="font-size: 0.92rem; font-weight: 600; color: var(--brown-deep);">
+                    <div style="font-size: 0.95rem; font-weight: 600; color: var(--brown-deep);">
                       ₹${Number(item.price).toLocaleString('en-IN')}
                     </div>
                   `}
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+                <div class="cart-item-controls-wrap" style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
                   ${!isRental ? `
-                    <button type="button" class="btn-qty-minus" data-id="${itemId}" style="width:26px; height:26px; border:1px solid var(--gold-border); background:var(--ivory); cursor:pointer;">-</button>
-                    <span style="font-size: 0.88rem; font-weight:600; width: 20px; text-align:center;">${item.quantity}</span>
-                    <button type="button" class="btn-qty-plus" data-id="${itemId}" style="width:26px; height:26px; border:1px solid var(--gold-border); background:var(--ivory); cursor:pointer;">+</button>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <button type="button" class="btn-qty-minus" data-id="${itemId}" style="width:28px; height:28px; border:1px solid var(--gold-border); background:var(--ivory); cursor:pointer;" aria-label="Decrease quantity">-</button>
+                      <span style="font-size: 0.88rem; font-weight:600; width: 22px; text-align:center;">${item.quantity}</span>
+                      <button type="button" class="btn-qty-plus" data-id="${itemId}" style="width:28px; height:28px; border:1px solid var(--gold-border); background:var(--ivory); cursor:pointer;" aria-label="Increase quantity">+</button>
+                    </div>
                   ` : `
-                    <span style="font-size: 0.74rem; color: var(--text-brown); letter-spacing: 0.04em;">1 Unit</span>
+                    <span style="font-size: 0.75rem; color: var(--text-brown); letter-spacing: 0.04em; white-space:nowrap;">1 Unit</span>
                   `}
-                </div>
 
-                <button type="button" class="btn-remove-item" data-id="${itemId}" style="background:none; border:none; color:#B91C1C; cursor:pointer; font-size:1.2rem; padding: 4px;" title="Remove piece">&times;</button>
+                  <button type="button" class="cart-remove-btn" data-id="${itemId}" aria-label="Remove ${item.name} from bag" title="Remove piece">&times;</button>
+                </div>
               </div>
             `;
           }).join('')}
@@ -319,8 +409,20 @@ async function renderCartPage() {
     btn.addEventListener('click', () => updateItemQuantity(btn.dataset.id, -1));
   });
 
-  cartContainer.querySelectorAll('.btn-remove-item').forEach(btn => {
-    btn.addEventListener('click', () => removeItem(btn.dataset.id));
+  cartContainer.querySelectorAll('.cart-remove-btn, .btn-remove-item').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const itemId = btn.dataset.id;
+      const row = btn.closest('.cart-item-row');
+      if (row) {
+        row.classList.add('removing');
+        setTimeout(() => {
+          removeItem(itemId);
+        }, 300);
+      } else {
+        removeItem(itemId);
+      }
+    });
   });
 
   // Attach checkout form submit

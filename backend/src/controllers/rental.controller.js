@@ -6,6 +6,31 @@ const rentalService = require('../services/rental.service');
 const { sendSuccess } = require('../utils/response');
 
 /**
+ * Public: Calculate rental price quote for a product and duration
+ * GET /api/rentals/price?productId=...&days=...
+ */
+async function calculatePrice(req, res, next) {
+  try {
+    const { productId, days } = req.query;
+    if (!productId || !days) {
+      const error = new Error('productId and days are required query parameters');
+      error.statusCode = 400;
+      throw error;
+    }
+    const daysNum = parseInt(days, 10);
+    if (isNaN(daysNum) || daysNum < 1 || String(days).includes('.')) {
+      const error = new Error('Rental days must be a positive integer.');
+      error.statusCode = 400;
+      throw error;
+    }
+    const pricing = await rentalService.getPriceQuote(productId, daysNum);
+    return sendSuccess(res, pricing);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
  * Public: Check product rental availability for requested dates
  * GET /api/rentals/availability?productId=...&startDate=...&days=...&quantity=...
  */
@@ -132,6 +157,7 @@ async function updateProductRentalSettings(req, res, next) {
 }
 
 module.exports = {
+  calculatePrice,
   checkAvailability,
   getCalendar,
   getCustomerRentals,

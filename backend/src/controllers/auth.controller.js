@@ -11,6 +11,7 @@ function setAuthCookie(res, token, rememberMe = false) {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
     sameSite: 'lax',
+    path: '/',
     maxAge
   });
 }
@@ -19,7 +20,8 @@ function clearAuthCookie(res) {
   res.clearCookie('token', {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
-    sameSite: 'lax'
+    sameSite: 'lax',
+    path: '/'
   });
 }
 
@@ -27,7 +29,14 @@ async function signup(req, res, next) {
   try {
     const { user, token } = await authService.signup(req.body);
     setAuthCookie(res, token, false);
-    return sendSuccess(res, { user }, 'Account created successfully. Welcome to House of Shubhanshi.', 201);
+    return res.status(201).json({
+      success: true,
+      authenticated: true,
+      message: 'Account created successfully. Welcome to House of Shubhanshi.',
+      data: { user, token, authenticated: true },
+      user,
+      token
+    });
   } catch (err) {
     next(err);
   }
@@ -37,20 +46,42 @@ async function login(req, res, next) {
   try {
     const { user, token } = await authService.login(req.body);
     setAuthCookie(res, token, !!req.body.rememberMe);
-    return sendSuccess(res, { user }, 'Login successful. Welcome back.');
+    return res.status(200).json({
+      success: true,
+      authenticated: true,
+      message: 'Login successful. Welcome back.',
+      data: { user, token, authenticated: true },
+      user,
+      token
+    });
   } catch (err) {
     next(err);
   }
 }
 
+
 async function logout(req, res) {
   clearAuthCookie(res);
-  return sendSuccess(res, null, 'Logged out successfully.');
+  return res.status(200).json({
+    success: true,
+    authenticated: false,
+    message: 'Logged out successfully.',
+    data: null
+  });
 }
 
 async function getMe(req, res) {
   // req.user was populated by requireAuth middleware
-  return sendSuccess(res, { user: req.user });
+  return res.status(200).json({
+    success: true,
+    authenticated: true,
+    message: 'Authenticated session active',
+    data: {
+      authenticated: true,
+      user: req.user
+    },
+    user: req.user
+  });
 }
 
 async function updateProfile(req, res, next) {

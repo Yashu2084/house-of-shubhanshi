@@ -21,9 +21,13 @@ let activeSalesRange = '30d';
 document.addEventListener('DOMContentLoaded', async () => {
   const user = window.HouseAuth ? await window.HouseAuth.getAuthUser() : null;
 
-  if (!user || user.role !== 'ADMIN') {
-    alert('Access Restricted: Administrator credentials required.');
+  if (!user) {
     window.location.href = 'login.html?redirect=admin-dashboard.html';
+    return;
+  }
+
+  if (user.role !== 'ADMIN') {
+    window.location.href = 'customer-dashboard.html';
     return;
   }
 
@@ -667,11 +671,6 @@ async function loadAvailabilityCalendar(productId) {
   } catch (err) {
     container.innerHTML = `<p style="color:#991B1B; padding:10px;">${err.message}</p>`;
   }
-}
-        console.error(e);
-      }
-    });
-  });
 }
 
 function renderCollectionsTable() {

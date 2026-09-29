@@ -32,7 +32,8 @@ function generateToken(user, rememberMe = false) {
 async function signup(payload) {
   const validation = validateSignup(payload);
   if (!validation.isValid) {
-    const error = new Error('Validation failed');
+    const errorMsg = Object.values(validation.errors)[0] || 'Validation failed';
+    const error = new Error(errorMsg);
     error.statusCode = 400;
     error.errors = validation.errors;
     throw error;
@@ -79,7 +80,8 @@ async function signup(payload) {
 async function login(payload) {
   const validation = validateLogin(payload);
   if (!validation.isValid) {
-    const error = new Error('Please provide a valid email and password.');
+    const errorMsg = Object.values(validation.errors)[0] || 'Please provide a valid email and password.';
+    const error = new Error(errorMsg);
     error.statusCode = 400;
     error.errors = validation.errors;
     throw error;

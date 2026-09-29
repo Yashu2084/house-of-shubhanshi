@@ -85,17 +85,17 @@
          2. HERO SECTION — VIDEO INTRO
          ======================================================================= -->
     <section class="hero-section" id="hero">
-      <!-- Full Viewport Background Video with Poster Fallback -->
+      <!-- Full Viewport Background Video with Poster Fallback (Optimized WebP Poster + Responsive Sources) -->
       <video class="hero-video-bg" 
              autoplay 
              muted 
              loop 
              playsinline 
-             poster="assets/images/hero/hero-poster.jpg"
+             preload="metadata"
+             poster="assets/images/hero/hero-poster.webp"
              aria-hidden="true">
-        <source src="assets/video/hero-fashion.mp4" type="video/mp4">
-        <source src="assets/video/hero-fashion.webm" type="video/webm">
-        <source src="assets/video/hero-video.mp4" type="video/mp4">
+        <source src="assets/video/hero-desktop.mp4" type="video/mp4" media="(min-width: 769px)">
+        <source src="assets/video/hero-mobile.mp4" type="video/mp4">
       </video>
 
       <!-- Warm Brown Subtle Tint Overlay -->

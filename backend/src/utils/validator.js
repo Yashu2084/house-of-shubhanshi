@@ -40,9 +40,10 @@ function validateSignup(data = {}) {
     }
   }
 
-  if (password !== confirmPassword) {
+  if (confirmPassword !== undefined && password !== confirmPassword) {
     errors.confirmPassword = 'Passwords do not match';
   }
+
 
   return {
     isValid: Object.keys(errors).length === 0,

@@ -8,11 +8,25 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/house_of_shubhanshi?schema=public';
+const JWT_SECRET = process.env.JWT_SECRET || (NODE_ENV === 'production' ? null : 'house_of_shubhanshi_default_secure_secret_2026');
+
+if (!JWT_SECRET) {
+  const errMsg = '[Configuration Error] JWT_SECRET environment variable is missing. Authentication cannot function securely.';
+  if (NODE_ENV === 'production') {
+    throw new Error(errMsg);
+  } else {
+    console.warn(`\x1b[33m${errMsg}\x1b[0m`);
+  }
+}
+
 module.exports = {
-  PORT: parseInt(process.env.PORT || '3000', 10),
-  NODE_ENV: process.env.NODE_ENV || 'development',
-  DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/house_of_shubhanshi?schema=public',
-  JWT_SECRET: process.env.JWT_SECRET || 'house_of_shubhanshi_default_secure_secret_2026',
+  PORT,
+  NODE_ENV,
+  DATABASE_URL,
+  JWT_SECRET: JWT_SECRET || 'house_of_shubhanshi_default_secure_secret_2026',
   COOKIE_EXPIRES_IN_MS: parseInt(process.env.COOKIE_EXPIRES_IN_MS || '604800000', 10), // 7 days
   ADMIN_NAME: process.env.ADMIN_NAME || 'House of Shubhanshi Atelier',
   ADMIN_EMAIL: (process.env.ADMIN_EMAIL || 'admin@houseofshubhanshi.com').toLowerCase(),

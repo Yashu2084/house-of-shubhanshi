@@ -41,9 +41,15 @@ function calculateRentalEndDate(startDateStr, rentalDays) {
  * Never trust client pricing
  */
 function calculateRentalPrice(product, rentalDays) {
-  const days = Math.max(1, parseInt(rentalDays, 10) || 1);
+  const days = parseInt(rentalDays, 10);
+  if (isNaN(days) || days < 1) {
+    const error = new Error('Rental duration must be a positive whole number of days.');
+    error.statusCode = 400;
+    throw error;
+  }
+
   const minDays = product.minimumRentalDays || 1;
-  const maxDays = product.maximumRentalDays || 7;
+  const maxDays = (product.maximumRentalDays && product.maximumRentalDays > 7) ? product.maximumRentalDays : (product.maximumRentalDays || 30);
 
   if (days < minDays) {
     const error = new Error(`Minimum rental duration for "${product.name}" is ${minDays} day(s).`);
@@ -66,13 +72,37 @@ function calculateRentalPrice(product, rentalDays) {
   const totalRentalCost = rentalPrice + rentalDeposit;
 
   return {
+    productId: product.id,
+    productName: product.name,
     rentalDays: days,
     basePrice,
     pricePerDay,
     rentalPrice,
+    hirePrice: rentalPrice,
     securityDeposit: rentalDeposit,
-    totalRentalCost
+    totalRentalCost,
+    totalEstimatedPrice: totalRentalCost,
+    minimumRentalDays: minDays,
+    maximumRentalDays: maxDays
   };
+}
+
+/**
+ * Get Pricing Quote for Product and Duration
+ */
+async function getPriceQuote(productId, rentalDays) {
+  const product = await db.product.findUnique({ where: { id: productId } });
+  if (!product) {
+    const error = new Error('Product not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (!product.isRentable) {
+    const error = new Error('This piece is not available for rental.');
+    error.statusCode = 400;
+    throw error;
+  }
+  return calculateRentalPrice(product, rentalDays);
 }
 
 /**
@@ -405,6 +435,7 @@ module.exports = {
   formatDate,
   calculateRentalEndDate,
   calculateRentalPrice,
+  getPriceQuote,
   checkProductAvailability,
   getCustomerRentals,
   getAdminRentals,

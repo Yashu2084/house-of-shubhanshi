@@ -13,13 +13,46 @@ const brandInfo = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  initHeroVideo();
   initHeaderScroll();
   initMobileDrawer();
   initScrollReveals();
   initProductModal();
+  initProductCardLightbox();
   initNewsletter();
   initSmoothScroll();
 });
+
+/* --------------------------------------------------------------------------
+   0. HERO VIDEO AUTOPLAY & PERFORMANCE RESILIENCE
+   -------------------------------------------------------------------------- */
+function initHeroVideo() {
+  const video = document.querySelector('.hero-video');
+  if (!video) return;
+
+  const handleVideoFallback = () => {
+    video.style.display = 'none';
+    const heroBg = document.querySelector('.hero-background');
+    if (heroBg) {
+      heroBg.classList.add('video-fallback-active');
+      heroBg.style.backgroundImage = "url('assets/images/hero/hero-poster.webp')";
+      heroBg.style.backgroundSize = 'cover';
+      heroBg.style.backgroundPosition = 'center';
+    }
+  };
+
+  video.addEventListener('error', handleVideoFallback);
+
+  const playPromise = video.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(error => {
+      // Browser autoplay policy, low power mode, or battery saver caught cleanly without UI flicker
+      console.info('Hero video autoplay deferred by browser policy; showing poster cleanly.', error);
+      handleVideoFallback();
+    });
+  }
+}
+
 
 /* --------------------------------------------------------------------------
    1. STICKY HEADER TRANSITION ON SCROLL
@@ -268,6 +301,14 @@ function initProductModal() {
     }
   });
 
+  if (modalImg) {
+    modalImg.style.cursor = 'zoom-in';
+    modalImg.title = 'Click to inspect full garment';
+    modalImg.addEventListener('click', () => {
+      openImageLightbox(modalImg.src, modalImg.alt);
+    });
+  }
+
   // Add to Bag action
   if (addToBagBtn) {
     addToBagBtn.addEventListener('click', () => {
@@ -299,6 +340,57 @@ function initProductModal() {
     });
   }
 }
+
+/* --------------------------------------------------------------------------
+   4B. FULL-DRESS IMAGE LIGHTBOX & ZOOM INSPECTION
+   -------------------------------------------------------------------------- */
+function openImageLightbox(src, alt) {
+  let lightbox = document.getElementById('imageLightbox');
+  if (!lightbox) {
+    lightbox = document.createElement('div');
+    lightbox.id = 'imageLightbox';
+    lightbox.className = 'image-lightbox';
+    lightbox.innerHTML = `
+      <div class="lightbox-backdrop"></div>
+      <div class="lightbox-content">
+        <button class="lightbox-close-btn" aria-label="Close Lightbox">&times;</button>
+        <img class="lightbox-image" src="" alt="Garment Inspection">
+      </div>
+    `;
+    document.body.appendChild(lightbox);
+
+    const close = () => {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = '';
+    };
+
+    lightbox.querySelector('.lightbox-backdrop').addEventListener('click', close);
+    lightbox.querySelector('.lightbox-close-btn').addEventListener('click', close);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lightbox.classList.contains('active')) close();
+    });
+  }
+
+  const imgEl = lightbox.querySelector('.lightbox-image');
+  imgEl.src = src;
+  imgEl.alt = alt || 'Garment Full View';
+  lightbox.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+window.openImageLightbox = window.openImageLightbox || openImageLightbox;
+
+function initProductCardLightbox() {
+  const productImgs = document.querySelectorAll('.product-card .product-image');
+  productImgs.forEach(img => {
+    img.style.cursor = 'zoom-in';
+    img.title = 'Click to inspect full garment';
+    img.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openImageLightbox(img.src, img.alt);
+    });
+  });
+}
+
 
 /* --------------------------------------------------------------------------
    5. NEWSLETTER SUBSCRIPTION & TOAST NOTIFICATION

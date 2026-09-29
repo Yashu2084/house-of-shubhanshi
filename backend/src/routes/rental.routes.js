@@ -7,6 +7,8 @@ const rentalController = require('../controllers/rental.controller');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 // Public endpoints
+router.get('/calculate-price', rentalController.calculatePrice);
+router.get('/price', rentalController.calculatePrice);
 router.get('/availability', rentalController.checkAvailability);
 router.get('/calendar/:productId', rentalController.getCalendar);
 
