@@ -87,7 +87,7 @@ export default function CustomerDashboardPage() {
       <main style={{ paddingTop: '150px', minHeight: '80vh', textAlign: 'center', backgroundColor: 'var(--ivory)' }}>
         <p style={{ fontFamily: 'var(--font-serif)', fontSize: '1.6rem', color: 'var(--gold)' }}>✦</p>
         <p style={{ color: 'var(--text-brown)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Unlocking your private atelier closet...
+          Loading your customer dashboard...
         </p>
       </main>
     );

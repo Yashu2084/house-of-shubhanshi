@@ -8,8 +8,9 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PORT = parseInt(process.env.PORT || '3001', 10);
 const NODE_ENV = process.env.NODE_ENV || 'development';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/house_of_shubhanshi?schema=public';
 const JWT_SECRET = process.env.JWT_SECRET || (NODE_ENV === 'production' ? null : 'house_of_shubhanshi_default_secure_secret_2026');
 
@@ -25,6 +26,7 @@ if (!JWT_SECRET) {
 module.exports = {
   PORT,
   NODE_ENV,
+  FRONTEND_URL,
   DATABASE_URL,
   JWT_SECRET: JWT_SECRET || 'house_of_shubhanshi_default_secure_secret_2026',
   COOKIE_EXPIRES_IN_MS: parseInt(process.env.COOKIE_EXPIRES_IN_MS || '604800000', 10), // 7 days

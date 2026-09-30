@@ -9,76 +9,61 @@ import api from '../lib/api';
 
 const FEATURED_PRODUCTS_FALLBACK = [
   {
-    id: 'prod_01',
-    name: 'The Noor Set',
-    category: 'RAW SILK & ORGANZA',
-    price: 48500,
+    id: 'prod_real_purple',
+    name: 'Purple Embroidered Kurta Set',
+    slug: 'purple-embroidered-kurta-set',
+    category: 'Suit Sets',
+    price: 4499,
     isRentable: true,
-    rentalBasePrice: 4500,
-    rentalPricePerDay: 1200,
-    rentalDeposit: 10000,
-    minimumRentalDays: 1,
-    maximumRentalDays: 30,
-    rentalAvailableStock: 2,
-    image: '/assets/images/collection/noor-set.jpg',
-    description: 'An ode to luminous celebrations. Handcrafted raw silk kurta paired with delicate zardozi embroidery and gossamer organza dupatta.',
-    fabric: 'Pure Raw Silk & Organza',
-    color: 'Warm Ivory with Antique Gold',
-    size: 'Custom Tailored / S, M, L, XL'
-  },
-  {
-    id: 'prod_02',
-    name: 'The Shubh Lehenga',
-    category: 'ROYAL VELVET COUTURE',
-    price: 82000,
-    isRentable: true,
-    rentalBasePrice: 7500,
-    rentalPricePerDay: 1800,
-    rentalDeposit: 15000,
+    rentalBasePrice: 1199,
+    rentalPricePerDay: 350,
+    rentalDeposit: 2500,
     minimumRentalDays: 2,
-    maximumRentalDays: 30,
-    rentalAvailableStock: 1,
-    image: '/assets/images/collection/shubh-lehenga.jpg',
-    description: 'Deep terracotta velvet with 320 hours of heirloom marodi and salma sitara needlework, paired with architectural choli and sheer tissue veil.',
-    fabric: 'Micro-Velvet & Tissue Silk',
-    color: 'Deep Terracotta & Antique Gold',
-    size: 'Bespoke Tailoring'
-  },
-  {
-    id: 'prod_03',
-    name: 'The Zariya Edit',
-    category: 'METALLIC TISSUE SAREE',
-    price: 36000,
-    isRentable: true,
-    rentalBasePrice: 3200,
-    rentalPricePerDay: 800,
-    rentalDeposit: 8000,
-    minimumRentalDays: 1,
-    maximumRentalDays: 30,
+    maximumRentalDays: 14,
     rentalAvailableStock: 3,
-    image: '/assets/images/collection/zariya-edit.jpg',
-    description: 'Antique gold metallic tissue weave with hand-embroidered resham and badla accents. Drapes with liquid grace for high-octane celebratory soirees.',
-    fabric: 'Pure Tissue Silk Saree',
-    color: 'Metallic Antique Gold',
-    size: '5.5 Meters + 1m Blouse'
+    image: '/images/products/purple-suit-set.webp',
+    description: 'Deep purple straight-fit kurta set with delicate gold embroidery along the collar, placket, and cuffs. Accompanied by a matching sheer dupatta with fine scallop-edge detailing.',
+    fabric: 'Silk Blend & Organza',
+    color: 'Purple',
+    size: 'S, M, L, XL'
   },
   {
-    id: 'prod_04',
-    name: 'The Aabha Collection',
-    category: 'CHANDERI ANARKALI',
-    price: 64000,
+    id: 'prod_real_brown',
+    name: 'Earth Brown Flared Lehenga Set',
+    slug: 'earth-brown-flared-lehenga-set',
+    category: 'Lehengas',
+    price: 5599,
     isRentable: true,
-    rentalBasePrice: 5500,
-    rentalPricePerDay: 1400,
-    rentalDeposit: 12000,
-    minimumRentalDays: 1,
-    maximumRentalDays: 30,
-    rentalAvailableStock: 2,
-    image: '/assets/images/collection/aabha-collection.jpg',
-    description: 'Flared kalidar anarkali in pure chanderi with vintage rose gold gota patti, fine sequin borders, and handcrafted potli tassels.',
-    fabric: 'Handwoven Chanderi Silk',
-    color: 'Dusty Rose & Antique Zari',
-    size: 'Custom Tailored'
+    rentalBasePrice: 1499,
+    rentalPricePerDay: 450,
+    rentalDeposit: 3000,
+    minimumRentalDays: 2,
+    maximumRentalDays: 14,
+    rentalAvailableStock: 3,
+    image: '/images/products/brown-lehenga-set.webp',
+    description: 'Rich earthy brown flared lehenga skirt paired with a statement halter neck blouse adorned with ornate golden cutwork embroidery.',
+    fabric: 'Crepe Silk Blend',
+    color: 'Brown',
+    size: 'S, M, L, XL'
+  },
+  {
+    id: 'prod_real_green',
+    name: 'Emerald Green Flared Anarkali Set',
+    slug: 'emerald-green-flared-anarkali-set',
+    category: 'Anarkalis',
+    price: 6699,
+    isRentable: true,
+    rentalBasePrice: 1799,
+    rentalPricePerDay: 550,
+    rentalDeposit: 3500,
+    minimumRentalDays: 2,
+    maximumRentalDays: 14,
+    rentalAvailableStock: 3,
+    image: '/images/products/green-anarkali-set.webp',
+    description: 'Flared emerald green anarkali silhouette accented with soft gathers, paired with a royal blue contrast dupatta finished with an antique gold border.',
+    fabric: 'Georgette Silk Blend',
+    color: 'Emerald Green',
+    size: 'S, M, L, XL'
   }
 ];
 
@@ -92,10 +77,10 @@ export default function HomePage() {
       try {
         const res = await api.get('/products');
         if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
-          setFeaturedProducts(res.data.slice(0, 4));
+          setFeaturedProducts(res.data.slice(0, 6));
         }
       } catch (e) {
-        // Fallback already pre-populated
+        // Fallback already pre-populated with real collection
       }
     }
     loadProducts();
@@ -110,15 +95,16 @@ export default function HomePage() {
       <section className="collection-section" id="collection">
         <div className="container">
           <div className="section-header reveal-init reveal-active">
-            <span className="section-tag">CURATED ATELIER PIECES</span>
-            <h2 className="section-title">THE COLLECTION</h2>
+            <span className="section-tag">NEW ARRIVALS</span>
+            <h2 className="section-title">THE NEW COLLECTION</h2>
             <div className="gold-divider"><span className="gold-divider-diamond"></span></div>
-            <p className="section-subtitle">&ldquo;Crafted for those who wear their story.&rdquo;</p>
+            <p className="section-subtitle">Thoughtfully designed Indian wear for weddings, celebrations, and festive gatherings.</p>
           </div>
 
           <div className="collection-grid">
             {featuredProducts.map((prod, index) => {
               const badgeNum = (index + 1).toString().padStart(2, '0');
+              const slug = prod.slug || prod.id;
               return (
                 <article key={prod.id} className="product-card reveal-init reveal-active" data-id={prod.id}>
                   <div className="product-image-wrap scale-hover">
@@ -132,20 +118,22 @@ export default function HomePage() {
                       className="product-image"
                       loading="lazy"
                       onClick={() => openLightbox(prod.image, prod.name)}
-                      style={{ cursor: 'zoom-in' }}
-                      title="Click to view garment"
+                      style={{ cursor: 'zoom-in', objectFit: 'contain' }}
+                      title="Click to view full image"
                     />
                     <button
                       className="product-quick-view"
                       type="button"
                       onClick={() => setSelectedProduct(prod)}
                     >
-                      VIEW PIECE
+                      QUICK VIEW
                     </button>
                   </div>
                   <div className="product-info">
-                    <span className="product-category">{prod.category || 'RAW SILK & ORGANZA'}</span>
-                    <h3 className="product-name font-serif">{prod.name}</h3>
+                    <span className="product-category">{prod.category || 'OCCASION WEAR'}</span>
+                    <h3 className="product-name font-serif">
+                      <Link href={`/shop/${slug}`}>{prod.name}</Link>
+                    </h3>
                     <p className="product-desc line-clamp-2">{prod.description}</p>
                     <div className="product-price">
                       ₹{Number(prod.price).toLocaleString('en-IN')}
@@ -163,7 +151,7 @@ export default function HomePage() {
 
           <div className="collection-cta-wrap reveal-init reveal-active" style={{ textAlign: 'center', marginTop: '40px' }}>
             <Link href="/shop" className="btn btn-gold-outline-dark">
-              VIEW ALL COLLECTIONS <span className="btn-arrow">&rarr;</span>
+              VIEW ALL DESIGNS <span className="btn-arrow">&rarr;</span>
             </Link>
           </div>
         </div>
@@ -177,36 +165,36 @@ export default function HomePage() {
               <div className="story-arch">
                 <img
                   src="/assets/images/story/our-story.jpg"
-                  alt="Atelier Craftsmanship - House of Shubhanshi"
+                  alt="House of Shubhanshi Design Story"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/story/our-story.jpg', 'Atelier Craftsmanship')}
+                  onClick={() => openLightbox('/assets/images/story/our-story.jpg', 'Design Story')}
                   style={{ cursor: 'zoom-in' }}
                 />
               </div>
               <div className="story-arch-badge">
                 <span className="badge-year">2026</span>
-                <span className="badge-label">HERITAGE ATELIER</span>
+                <span className="badge-label">INDIAN DESIGN</span>
               </div>
             </div>
 
             <div className="story-content reveal-init delay-1 reveal-active">
-              <span className="section-tag">ATELIER &amp; PHILOSOPHY</span>
+              <span className="section-tag">WHO WE ARE</span>
               <h2 className="section-title light">OUR STORY</h2>
               <div className="gold-accent-line"></div>
 
-              <h3 className="story-lead">&ldquo;Rooted in tradition. Designed for tomorrow.&rdquo;</h3>
+              <h3 className="story-lead">&ldquo;Rooted in Indian craft, made for the way we dress today.&rdquo;</h3>
 
               <p className="story-paragraph">
-                House of Shubhanshi was conceived out of an enduring devotion to Indian couture craftsmanship. In a world of transient micro-trends, we seek refuge in the slow, sacred rhythm of master looms and generational karigari.
+                House of Shubhanshi was created with a clear purpose: to design occasion wear that feels effortless, flattering, and genuinely special to wear. We focus on clean silhouettes, rich festive palettes, and fine detailing that stands out without feeling overwhelming.
               </p>
 
               <p className="story-paragraph">
-                Each silhouette is an architectural conversation between India&apos;s imperial textile legacy and the modern woman&apos;s quiet majesty. From the rhythmic hand-beating of raw zari to the delicate draping of tissue silks, every thread is imbued with devotion, heritage, and uncompromising grace.
+                Every piece is made to feel special — whether you&apos;re dressing up for a family wedding, an intimate celebration, or simply want an outfit that makes you feel confident the moment you put it on. With flexible options to buy or rent, great Indian fashion is now easier to enjoy.
               </p>
 
               <div className="story-signature">
                 <Link href="/about" className="btn btn-gold-outline">
-                  DISCOVER OUR STORY <span className="btn-arrow">&rarr;</span>
+                  READ OUR STORY <span className="btn-arrow">&rarr;</span>
                 </Link>
               </div>
             </div>
@@ -214,14 +202,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 4. FUTURE DESIGNS */}
+      {/* 4. BEHIND THE DESIGNS */}
       <section className="future-section" id="future">
         <div className="container">
           <div className="section-header reveal-init reveal-active">
-            <span className="section-tag">VISION &amp; RUNWAY</span>
-            <h2 className="section-title">THE FUTURE OF SHUBHANSHI</h2>
+            <span className="section-tag">DESIGN VISION</span>
+            <h2 className="section-title">BEHIND THE DESIGNS</h2>
             <div className="gold-divider"><span className="gold-divider-diamond"></span></div>
-            <p className="section-subtitle">&ldquo;Tradition is our foundation. Imagination is our future.&rdquo;</p>
+            <p className="section-subtitle">Comfortable fits, rich Indian color palettes, and versatile occasion wear.</p>
           </div>
 
           <div className="future-collage">
@@ -229,16 +217,16 @@ export default function HomePage() {
               <div className="future-img-wrap" style={{ minHeight: '480px' }}>
                 <img
                   src="/assets/images/future/future-01.jpg"
-                  alt="Future Silhouette Concept"
+                  alt="Celebration Silhouettes"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/future/future-01.jpg', 'Sculptural Draping')}
+                  onClick={() => openLightbox('/assets/images/future/future-01.jpg', 'Celebration Silhouettes')}
                   style={{ cursor: 'zoom-in' }}
                 />
               </div>
               <div className="future-card-content">
-                <span className="future-card-tag">NEW SILHOUETTES</span>
-                <h3 className="future-card-title">Sculptural Draping</h3>
-                <p className="future-card-desc">Redefining traditional drapes into avant-garde evening silhouettes for the global Indian patron.</p>
+                <span className="future-card-tag">SILHOUETTES</span>
+                <h3 className="future-card-title">Celebration-Ready Cuts</h3>
+                <p className="future-card-desc">Flattering flared silhouettes and straight-fit cuts tailored for easy movement through festive gatherings.</p>
               </div>
             </div>
 
@@ -246,54 +234,54 @@ export default function HomePage() {
               <div className="future-img-wrap">
                 <img
                   src="/assets/images/future/future-02.jpg"
-                  alt="Antique Gold Thread Weave"
+                  alt="Rich Tones & Details"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/future/future-02.jpg', 'Organic Metallic Zari')}
+                  onClick={() => openLightbox('/assets/images/future/future-02.jpg', 'Rich Tones & Detailing')}
                   style={{ cursor: 'zoom-in' }}
                 />
               </div>
               <div className="future-card-content">
-                <span className="future-card-tag">SLOW TEXTILES</span>
-                <h3 className="future-card-title">Organic Metallic Zari</h3>
-                <p className="future-card-desc">Reviving lost imperial metallurgical spinning techniques for featherlight luxury.</p>
+                <span className="future-card-tag">DETAILS</span>
+                <h3 className="future-card-title">Rich Tones &amp; Accents</h3>
+                <p className="future-card-desc">Jewel tones, warm earthy browns, and contrast dupattas finished with delicate border embroidery.</p>
               </div>
             </div>
 
             <div className="future-manifest-card reveal-init delay-2 reveal-active">
               <p className="future-manifest-text">
-                &ldquo;We do not design garments for a single season. We craft memories meant to be passed down through generations.&rdquo;
+                &ldquo;Every piece is made to feel special — whether you&apos;re dressing up for a celebration or simply want to feel your best.&rdquo;
               </p>
-              <span className="future-manifest-author">&mdash; Shubhanshi Atelier Manifesto</span>
+              <span className="future-manifest-author">&mdash; House of Shubhanshi</span>
             </div>
 
             <div className="future-card reveal-init delay-3 reveal-active">
               <div className="future-img-wrap">
                 <img
                   src="/assets/images/future/future-03.jpg"
-                  alt="Atelier Moodboard & Sketches"
+                  alt="The Design Process"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/future/future-03.jpg', 'The Design Room')}
+                  onClick={() => openLightbox('/assets/images/future/future-03.jpg', 'The Design Process')}
                   style={{ cursor: 'zoom-in' }}
                 />
               </div>
               <div className="future-card-content">
-                <span className="future-card-tag">BEHIND THE SEAMS</span>
-                <h3 className="future-card-title">The Design Room</h3>
-                <p className="future-card-desc">Where sketchbooks, raw pigments, and poetic inspirations converge into couture.</p>
+                <span className="future-card-tag">VERSATILITY</span>
+                <h3 className="future-card-title">Day to Evening Wear</h3>
+                <p className="future-card-desc">Styles you can wear simply for afternoon ceremonies or glam up with jewelry for the evening reception.</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 5. STORIES BEHIND PIECES */}
+      {/* 5. STORIES BEHIND THE PIECES */}
       <section className="pieces-section" id="pieces">
         <div className="container">
           <div className="section-header reveal-init reveal-active">
-            <span className="section-tag">PHILOSOPHY &amp; JOURNEY</span>
-            <h2 className="section-title light">THE STORY BEHIND THE PIECES</h2>
+            <span className="section-tag">HOW WE CREATE</span>
+            <h2 className="section-title light">HOW WE CREATE EACH PIECE</h2>
             <div className="gold-divider"><span className="gold-divider-diamond"></span></div>
-            <p className="section-subtitle light">&ldquo;Every garment is an heirloom in the making.&rdquo;</p>
+            <p className="section-subtitle light">Thoughtful design from initial sketch to the moment you wear it.</p>
           </div>
 
           <div className="pieces-container">
@@ -302,20 +290,20 @@ export default function HomePage() {
               <div className="piece-visual">
                 <img
                   src="/assets/images/pieces/piece-01-beginning.jpg"
-                  alt="Chapter 01 - The Beginning"
+                  alt="The Beginning - Thoughtful Design"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/pieces/piece-01-beginning.jpg', 'Chapter 01 - The Beginning')}
+                  onClick={() => openLightbox('/assets/images/pieces/piece-01-beginning.jpg', 'Thoughtful Design')}
                   style={{ cursor: 'zoom-in' }}
                 />
               </div>
               <div className="piece-text">
                 <div className="piece-num">01</div>
-                <h3 className="piece-title">THE BEGINNING</h3>
+                <h3 className="piece-title">THOUGHTFUL DESIGN</h3>
                 <p className="piece-body">
-                  Every thread begins with an idea. Sourced from the finest native silk cultivators across Varanasi and Chanderi, the raw yarn is spun with intention and unhurried reverence for nature.
+                  Every design begins with the silhouette. We look for fits that drape naturally, feel lightweight, and stay comfortable across long celebrations.
                 </p>
                 <blockquote className="piece-quote">
-                  &ldquo;Before the needle meets the fabric, the dream is already woven into the warp and weft.&rdquo;
+                  &ldquo;A great outfit starts with how comfortable you feel inside it.&rdquo;
                 </blockquote>
               </div>
             </article>
@@ -325,20 +313,20 @@ export default function HomePage() {
               <div className="piece-visual">
                 <img
                   src="/assets/images/pieces/piece-02-craft.jpg"
-                  alt="Chapter 02 - The Craft"
+                  alt="The Details"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/pieces/piece-02-craft.jpg', 'Chapter 02 - The Craft')}
+                  onClick={() => openLightbox('/assets/images/pieces/piece-02-craft.jpg', 'Refined Detailing')}
                   style={{ cursor: 'zoom-in' }}
                 />
               </div>
               <div className="piece-text">
                 <div className="piece-num">02</div>
-                <h3 className="piece-title">THE CRAFT</h3>
+                <h3 className="piece-title">REFINED DETAILING</h3>
                 <p className="piece-body">
-                  Every detail carries the hands and heritage behind it. Generations of master karigars spend hundreds of hours hand-carving wooden blocks, beating antique metal wires, and executing microscopic zardozi stitches that catch the light like liquid gold.
+                  From scallop-edge dupattas to fine thread accents along the collar and cuffs, we focus on subtle finishing that catches the light naturally without feeling heavy.
                 </p>
                 <blockquote className="piece-quote">
-                  &ldquo;Our artisans do not simply sew; they preserve a living civilization of Indian textile artistry.&rdquo;
+                  &ldquo;Details should speak gently, adding grace to every movement.&rdquo;
                 </blockquote>
               </div>
             </article>
@@ -348,20 +336,20 @@ export default function HomePage() {
               <div className="piece-visual">
                 <img
                   src="/assets/images/pieces/piece-03-dream.jpg"
-                  alt="Chapter 03 - The Dream"
+                  alt="Your Celebration"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/pieces/piece-03-dream.jpg', 'Chapter 03 - The Dream')}
+                  onClick={() => openLightbox('/assets/images/pieces/piece-03-dream.jpg', 'Your Celebration')}
                   style={{ cursor: 'zoom-in' }}
                 />
               </div>
               <div className="piece-text">
                 <div className="piece-num">03</div>
-                <h3 className="piece-title">THE DREAM</h3>
+                <h3 className="piece-title">YOUR CELEBRATION</h3>
                 <p className="piece-body">
-                  Designed not simply to be worn, but remembered. When you drape a House of Shubhanshi ensemble, you don a tapestry of poetry, celebration, and royal poise—a quiet confidence meant for the most celebrated chapters of your life.
+                  Clothes are meant to be worn, celebrated in, and remembered. Whether you choose to purchase an outfit for keeps or rent it for an upcoming weekend wedding, wear what brings you joy.
                 </p>
                 <blockquote className="piece-quote">
-                  &ldquo;Wear your heritage with pride. Wear the dream.&rdquo;
+                  &ldquo;Made for moments that matter.&rdquo;
                 </blockquote>
               </div>
             </article>
@@ -369,71 +357,71 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 6. BRAND PROMISE / THE SHUBHANSHI STANDARD */}
+      {/* 6. BRAND PROMISE */}
       <section className="standard-section" id="standard">
         <div className="container">
           <div className="section-header reveal-init reveal-active">
             <span className="section-tag">OUR PROMISE</span>
-            <h2 className="section-title">THE SHUBHANSHI STANDARD</h2>
+            <h2 className="section-title">THE SHUBHANSHI PROMISE</h2>
             <div className="gold-divider"><span className="gold-divider-diamond"></span></div>
-            <p className="section-subtitle">&ldquo;The hallmark of conscious Indian luxury.&rdquo;</p>
+            <p className="section-subtitle">Thoughtful Indian fashion with quality, fit, and convenience at its core.</p>
           </div>
 
           <div className="standards-grid">
             <div className="standard-card reveal-init delay-1 reveal-active">
               <div className="standard-numeral">01</div>
-              <h3 className="standard-title">MADE IN INDIA</h3>
-              <p className="standard-desc">Celebrating centuries of indigenous textile excellence and artisan communities.</p>
+              <h3 className="standard-title">AUTHENTIC DESIGN</h3>
+              <p className="standard-desc">Thoughtfully designed Indian outfits created with modern proportions and flattering fits.</p>
             </div>
 
             <div className="standard-card reveal-init delay-2 reveal-active">
               <div className="standard-numeral">02</div>
-              <h3 className="standard-title">PURE CRAFT</h3>
-              <p className="standard-desc">Thoughtfully created with obsessive attention to hand embroidery and artisanal finishing.</p>
+              <h3 className="standard-title">QUALITY FABRICS</h3>
+              <p className="standard-desc">Carefully selected fabrics that offer fluid drape, rich color depth, and lasting wear.</p>
             </div>
 
             <div className="standard-card reveal-init delay-3 reveal-active">
               <div className="standard-numeral">03</div>
-              <h3 className="standard-title">PREMIUM FABRICS</h3>
-              <p className="standard-desc">Handpicked pure silks, royal velvets, and handspun chanderi of unmatched character.</p>
+              <h3 className="standard-title">BUY OR RENT</h3>
+              <p className="standard-desc">Enjoy the flexibility of owning your favorite pieces or renting them for specific celebrations.</p>
             </div>
 
             <div className="standard-card reveal-init delay-4 reveal-active">
               <div className="standard-numeral">04</div>
-              <h3 className="standard-title">TIMELESS DESIGN</h3>
-              <p className="standard-desc">Silhouettes envisioned beyond fleeting seasons to become cherished family heirlooms.</p>
+              <h3 className="standard-title">ALL-DAY COMFORT</h3>
+              <p className="standard-desc">Outfits created to move with you comfortably from morning rituals to late-night dinners.</p>
             </div>
 
             <div className="standard-card reveal-init delay-5 reveal-active">
               <div className="standard-numeral">05</div>
-              <h3 className="standard-title">BESPOKE CARE</h3>
-              <p className="standard-desc">Every piece is tailored to celebrate you, made to be loved, worn, and remembered.</p>
+              <h3 className="standard-title">CONCIERGE HELP</h3>
+              <p className="standard-desc">Direct WhatsApp assistance whenever you need guidance with sizing, delivery dates, or styling.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 7. FINAL CINEMATIC CTA */}
+      {/* 7. FINAL CTA */}
       <section className="final-cta-section">
         <img
           src="/assets/images/hero/final-cta-bg.jpg"
-          alt="House of Shubhanshi Luxury Couture"
+          alt="House of Shubhanshi Celebration Wear"
           className="final-cta-bg"
           loading="lazy"
         />
         <div className="final-cta-overlay"></div>
 
         <div className="final-cta-content reveal-init reveal-active">
-          <span className="section-tag">STEP INTO THE ATELIER</span>
-          <h2 className="final-cta-title">WEAR THE DREAM</h2>
+          <span className="section-tag">EXPLORE THE COLLECTION</span>
+          <h2 className="final-cta-title">READY FOR YOUR NEXT OCCASION?</h2>
           <div className="gold-divider"><span className="gold-divider-diamond"></span></div>
           <p className="final-cta-sub">
-            &ldquo;Discover the House of Shubhanshi and find your signature heirloom piece.&rdquo;
+            Explore our newest arrivals and find the perfect outfit for your upcoming celebrations.
           </p>
 
           <div className="final-cta-actions">
             <Link href="/shop" className="btn btn-gold">
-              SHOP THE COLLECTION <span className="btn-arrow">&rarr;</span>
+              SHOP THE NEW COLLECTION <span className="btn-arrow">&rarr;</span>
             </Link>
           </div>
         </div>

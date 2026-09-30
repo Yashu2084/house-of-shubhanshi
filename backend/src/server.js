@@ -21,12 +21,34 @@ const rentalRoutes = require('./routes/rental.routes');
 
 const app = express();
 
-// Middleware: CORS (Allows same-origin and credentials)
+// Trust reverse proxy (Next.js rewrites, Nginx, cloud load balancers)
+app.set('trust proxy', 1);
+
+// Allowed origins for CORS
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://houseofshubhanshi.com',
+  'https://www.houseofshubhanshi.com',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+// Middleware: CORS (Allows same-origin, Next.js proxy, and specified domains with credentials)
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. Next.js SSR proxy, curl, mobile)
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    // Allow local development variants
+    if (env.NODE_ENV !== 'production' && (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))) {
+      return callback(null, true);
+    }
+    return callback(new Error('CORS request blocked by House of Shubhanshi policy'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Middleware: Body & Cookie Parsing
@@ -52,20 +74,20 @@ app.use('/api/customer', customerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/rentals', rentalRoutes);
 
-// Health Check Endpoint (Actively tests PostgreSQL connectivity)
+// Health Check Endpoint (Actively tests PostgreSQL connectivity without exposing secrets)
 app.get('/api/health', async (req, res) => {
   const isDbConnected = await db.testConnection();
   if (isDbConnected) {
     return res.status(200).json({
-      success: true,
-      message: 'House of Shubhanshi backend is running',
-      database: 'connected'
+      status: 'ok',
+      database: 'connected',
+      timestamp: new Date().toISOString()
     });
   } else {
     return res.status(503).json({
-      success: false,
-      message: 'House of Shubhanshi backend is running',
-      database: 'disconnected'
+      status: 'error',
+      database: 'disconnected',
+      message: 'Database connection failed'
     });
   }
 });

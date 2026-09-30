@@ -29,15 +29,16 @@ function LoginFormContent() {
       setError('');
       const loggedUser = await login(email, password, rememberMe);
 
-      // Route according to role and redirectTarget
-      if (loggedUser.role === 'ADMIN') {
+      // Route according to authenticated role
+      if (loggedUser && loggedUser.role === 'ADMIN') {
         router.push(redirectTarget || '/admin');
       } else {
         router.push(redirectTarget || '/customer');
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.message || 'Invalid email or password. Please verify your credentials.');
+      // Clean, user-facing error message without database details or stack traces
+      setError(err.message || 'Email or password is incorrect. Please check your details and try again.');
     } finally {
       setLoading(false);
     }
@@ -46,11 +47,11 @@ function LoginFormContent() {
   return (
     <div className="auth-card">
       <div className="auth-header">
-        <span className="section-tag">PRIVATE ATELIER CLIENT ACCESS</span>
-        <h1 className="auth-title">PATRON SIGN IN</h1>
+        <span className="section-tag">ACCOUNT ACCESS</span>
+        <h1 className="auth-title">SIGN IN</h1>
         <div className="gold-divider"><span className="gold-divider-diamond"></span></div>
         <p className="auth-subtitle">
-          Enter your registered email to access your personal closet, track couture deliveries, and manage dress reservations.
+          Welcome back. Enter your email to view your orders, saved pieces, and dress reservations.
         </p>
       </div>
 
@@ -67,7 +68,7 @@ function LoginFormContent() {
             type="email"
             id="loginEmail"
             className="form-input"
-            placeholder="patron@houseofshubhanshi.com"
+            placeholder="name@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -79,13 +80,13 @@ function LoginFormContent() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <label className="form-label" htmlFor="loginPassword">Password</label>
             <a
-              href="https://wa.me/919560011351?text=Hello%20House%20of%20Shubhanshi%20Concierge,%20I%20need%20assistance%20recovering%20my%20account%20password."
+              href="https://wa.me/919560011351?text=Hello%20House%20of%20Shubhanshi,%20I%20need%20help%20recovering%20my%20account%20password."
               target="_blank"
               rel="noopener noreferrer"
               className="form-help-link"
               style={{ fontSize: '0.75rem', color: 'var(--gold-dark)' }}
             >
-              Forgotten Password?
+              Forgot Password?
             </a>
           </div>
           <input
@@ -109,7 +110,7 @@ function LoginFormContent() {
             onChange={(e) => setRememberMe(e.target.checked)}
           />
           <label htmlFor="rememberMe" className="form-checkbox-label" style={{ fontSize: '0.82rem', color: 'var(--text-brown)', cursor: 'pointer' }}>
-            Remember my atelier session for 30 days
+            Remember me on this device
           </label>
         </div>
 
@@ -119,17 +120,17 @@ function LoginFormContent() {
           disabled={loading}
           style={{ width: '100%', padding: '16px', letterSpacing: '0.12em' }}
         >
-          {loading ? 'SIGNING IN...' : 'SIGN IN TO YOUR CLOSET'}
+          {loading ? 'SIGNING IN...' : 'SIGN IN'}
         </button>
 
         <div className="auth-footer" style={{ textAlign: 'center', marginTop: '24px', fontSize: '0.85rem', color: 'var(--text-brown)' }}>
-          <span>Not yet a member of the House? </span>
+          <span>Don&apos;t have an account yet? </span>
           <Link
             href={`/signup${redirectTarget ? `?redirect=${encodeURIComponent(redirectTarget)}` : ''}`}
             className="auth-link"
             style={{ color: 'var(--gold-dark)', fontWeight: 600, textDecoration: 'underline' }}
           >
-            Create Private Account
+            Create an Account
           </Link>
         </div>
       </form>

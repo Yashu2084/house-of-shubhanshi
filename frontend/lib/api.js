@@ -2,14 +2,28 @@
 // HOUSE OF SHUBHANSHI — CENTRALIZED API CLIENT
 // ==============================================================================
 
+// In browser, ALWAYS use relative '/api' so cookies are first-party and proxy via Next.js rewrites
+// In SSR (server-side), route directly to backend host without exposing to client
 const API_BASE = typeof window !== 'undefined'
-  ? (process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api` : '/api')
-  : (process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api` : 'http://localhost:3001/api');
+  ? '/api'
+  : ((process.env.BACKEND_URL || process.env.INTERNAL_API_URL || 'http://localhost:3001').replace(/\/$/, '') + '/api');
 
 async function request(endpoint, options = {}) {
-  const url = endpoint.startsWith('http')
-    ? endpoint
-    : `${API_BASE}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+  // Normalize endpoint to prevent double /api/api
+  let clean = endpoint;
+  if (clean.startsWith('http://') || clean.startsWith('https://')) {
+    // Keep absolute url intact
+  } else {
+    if (clean.startsWith('/api/')) {
+      clean = clean.slice(4);
+    } else if (clean.startsWith('/api')) {
+      clean = clean.slice(4);
+    } else if (clean.startsWith('api/')) {
+      clean = clean.slice(3);
+    }
+    const formatted = clean.startsWith('/') ? clean : `/${clean}`;
+    clean = `${API_BASE}${formatted}`;
+  }
 
   const headers = {
     'Content-Type': 'application/json',
@@ -19,7 +33,7 @@ async function request(endpoint, options = {}) {
   const config = {
     ...options,
     headers,
-    credentials: 'include' // Enforce HTTP-only auth cookies
+    credentials: 'include' // Always enforce HTTP-only auth cookies
   };
 
   if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
@@ -27,7 +41,7 @@ async function request(endpoint, options = {}) {
   }
 
   try {
-    const res = await fetch(url, config);
+    const res = await fetch(clean, config);
     let data;
     const contentType = res.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
@@ -48,6 +62,21 @@ async function request(endpoint, options = {}) {
 
     return data;
   } catch (err) {
+    // Provide clean, friendly message on network disconnection or server unreachable
+    if (
+      err.name === 'TypeError' ||
+      (err.message && (
+        err.message.includes('fetch') ||
+        err.message.includes('network') ||
+        err.message.includes('Failed to fetch') ||
+        err.message.includes('ECONNREFUSED')
+      ))
+    ) {
+      const connErr = new Error('Unable to connect to the server. Please try again.');
+      connErr.status = 503;
+      connErr.originalError = err;
+      throw connErr;
+    }
     throw err;
   }
 }

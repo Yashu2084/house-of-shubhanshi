@@ -5,21 +5,28 @@ const authService = require('../services/auth.service');
 const env = require('../config/env');
 const { sendSuccess, sendError } = require('../utils/response');
 
-function setAuthCookie(res, token, rememberMe = false) {
+function isSecureConnection(req) {
+  if (env.NODE_ENV === 'production') {
+    return true;
+  }
+  return req ? Boolean(req.secure || req.headers['x-forwarded-proto'] === 'https') : false;
+}
+
+function setAuthCookie(res, token, rememberMe = false, req = null) {
   const maxAge = rememberMe ? 30 * 24 * 60 * 60 * 1000 : env.COOKIE_EXPIRES_IN_MS;
   res.cookie('token', token, {
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
+    secure: isSecureConnection(req),
     sameSite: 'lax',
     path: '/',
     maxAge
   });
 }
 
-function clearAuthCookie(res) {
+function clearAuthCookie(res, req = null) {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
+    secure: isSecureConnection(req),
     sameSite: 'lax',
     path: '/'
   });
@@ -28,7 +35,7 @@ function clearAuthCookie(res) {
 async function signup(req, res, next) {
   try {
     const { user, token } = await authService.signup(req.body);
-    setAuthCookie(res, token, false);
+    setAuthCookie(res, token, false, req);
     return res.status(201).json({
       success: true,
       authenticated: true,
@@ -45,7 +52,7 @@ async function signup(req, res, next) {
 async function login(req, res, next) {
   try {
     const { user, token } = await authService.login(req.body);
-    setAuthCookie(res, token, !!req.body.rememberMe);
+    setAuthCookie(res, token, !!req.body.rememberMe, req);
     return res.status(200).json({
       success: true,
       authenticated: true,
@@ -61,7 +68,7 @@ async function login(req, res, next) {
 
 
 async function logout(req, res) {
-  clearAuthCookie(res);
+  clearAuthCookie(res, req);
   return res.status(200).json({
     success: true,
     authenticated: false,

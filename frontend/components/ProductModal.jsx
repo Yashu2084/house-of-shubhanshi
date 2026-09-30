@@ -76,7 +76,7 @@ export default function ProductModal({ product, onClose }) {
         </div>
 
         <div className="modal-body">
-          <span className="modal-tag">{product.category || 'HANDCRAFTED COUTURE'}</span>
+          <span className="modal-tag">{product.category || 'OCCASION WEAR'}</span>
           <h3 className="modal-title font-serif">{product.name}</h3>
 
           {isRentable && (
@@ -86,14 +86,14 @@ export default function ProductModal({ product, onClose }) {
                 className={`rental-mode-btn ${mode === 'BUY' ? 'active' : ''}`}
                 onClick={() => setMode('BUY')}
               >
-                ✦ BUY PIECE (PERMANENT)
+                ✦ BUY OUTFIT
               </button>
               <button
                 type="button"
                 className={`rental-mode-btn ${mode === 'RENT' ? 'active' : ''}`}
                 onClick={() => setMode('RENT')}
               >
-                ✧ RENT PIECE (1–7+ DAYS)
+                ✧ RENT (2–14 DAYS)
               </button>
             </div>
           )}
@@ -124,7 +124,7 @@ export default function ProductModal({ product, onClose }) {
                 )}
                 <div className="modal-detail-item">
                   <span className="modal-detail-label">Delivery</span>
-                  <span className="modal-detail-val">Bespoke Handcrafting (3–4 Weeks)</span>
+                  <span className="modal-detail-val">Dispatched in 2–4 Business Days</span>
                 </div>
               </div>
 

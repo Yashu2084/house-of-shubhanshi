@@ -43,6 +43,7 @@ async function initDb() {
         await pool.query(schemaSql);
         await seedDatabase(pool);
         await migrateRentals(pool);
+        await syncRealProducts(pool);
         return;
       }
     } catch (err) {
@@ -68,6 +69,7 @@ async function initDb() {
     await pgliteInstance.exec(schemaSql);
     await seedDatabase(pgliteInstance);
     await migrateRentals(pgliteInstance);
+    await syncRealProducts(pgliteInstance);
   } catch (embeddedErr) {
     console.error('[Database Error] Failed to initialize embedded PostgreSQL:', embeddedErr);
     isPostgresConnected = false;
@@ -425,6 +427,142 @@ async function migrateRentals(executor) {
     }
   } catch (err) {
     console.warn('[Database Notice] migrateRentals notice:', err.message);
+  }
+}
+
+/**
+ * Ensure real House of Shubhanshi garments are active and demo products are archived
+ */
+async function syncRealProducts(executor) {
+  const q = (text, params) => executor.query(text, params);
+  try {
+    // 1. Soft-delete demo products so historical order/rental records remain intact
+    const demoIds = ['prod_01', 'prod_02', 'prod_03', 'prod_04'];
+    await q('UPDATE products SET is_active = false WHERE id = ANY($1)', [demoIds]);
+
+    // 2. Real products
+    const realProducts = [
+      {
+        id: 'prod_real_purple',
+        name: 'Purple Embroidered Kurta Set',
+        slug: 'purple-embroidered-kurta-set',
+        description: 'Deep purple straight-fit kurta set with delicate gold embroidery along the collar, placket, and cuffs. Accompanied by a matching sheer dupatta finished with fine scallop-edge detailing. Perfect for festive celebrations, poojas, and intimate gatherings.',
+        price: 4499.00,
+        compare_at_price: 5499.00,
+        image: '/images/products/purple-suit-set.webp',
+        images: JSON.stringify(['/images/products/purple-suit-set.webp', '/images/products/purple-suit-set.jpg']),
+        category: 'Suit Sets',
+        fabric: 'Silk Blend & Organza',
+        color: 'Purple',
+        size: 'S, M, L, XL',
+        material: 'Silk Blend',
+        featured: true,
+        stock: 10,
+        is_active: true,
+        collection_id: 'col_01',
+        is_rentable: true,
+        rental_base_price: 1199.00,
+        rental_price_per_day: 350.00,
+        minimum_rental_days: 2,
+        maximum_rental_days: 14,
+        rental_deposit: 2500.00,
+        rental_available_stock: 3
+      },
+      {
+        id: 'prod_real_brown',
+        name: 'Earth Brown Flared Lehenga Set',
+        slug: 'earth-brown-flared-lehenga-set',
+        description: 'Rich earthy brown flared lehenga skirt paired with a statement halter neck blouse adorned with ornate golden cutwork embroidery. Designed for fluid movement and an effortless festive silhouette.',
+        price: 5599.00,
+        compare_at_price: 6999.00,
+        image: '/images/products/brown-lehenga-set.webp',
+        images: JSON.stringify(['/images/products/brown-lehenga-set.webp', '/images/products/brown-lehenga-set.jpg']),
+        category: 'Lehengas',
+        fabric: 'Crepe Silk Blend',
+        color: 'Brown',
+        size: 'S, M, L, XL',
+        material: 'Crepe Silk Blend',
+        featured: true,
+        stock: 8,
+        is_active: true,
+        collection_id: 'col_02',
+        is_rentable: true,
+        rental_base_price: 1499.00,
+        rental_price_per_day: 450.00,
+        minimum_rental_days: 2,
+        maximum_rental_days: 14,
+        rental_deposit: 3000.00,
+        rental_available_stock: 3
+      },
+      {
+        id: 'prod_real_green',
+        name: 'Emerald Green Flared Anarkali Set',
+        slug: 'emerald-green-flared-anarkali-set',
+        description: 'Flared emerald green anarkali silhouette accented with soft gathers, paired with a royal blue contrast dupatta finished with an antique gold border and delicate scattered motifs. Ideal for sangeets, weddings, and evening soirees.',
+        price: 6699.00,
+        compare_at_price: 7999.00,
+        image: '/images/products/green-anarkali-set.webp',
+        images: JSON.stringify(['/images/products/green-anarkali-set.webp', '/images/products/green-anarkali-set.jpg']),
+        category: 'Anarkalis',
+        fabric: 'Georgette Silk Blend',
+        color: 'Emerald Green',
+        size: 'S, M, L, XL',
+        material: 'Georgette Silk Blend',
+        featured: true,
+        stock: 6,
+        is_active: true,
+        collection_id: 'col_03',
+        is_rentable: true,
+        rental_base_price: 1799.00,
+        rental_price_per_day: 550.00,
+        minimum_rental_days: 2,
+        maximum_rental_days: 14,
+        rental_deposit: 3500.00,
+        rental_available_stock: 3
+      }
+    ];
+
+    for (const prod of realProducts) {
+      const check = await q('SELECT id FROM products WHERE id = $1', [prod.id]);
+      if (check.rows.length > 0) {
+        await q(`
+          UPDATE products SET
+            name = $2, slug = $3, description = $4, price = $5, compare_at_price = $6,
+            image = $7, images = $8, category = $9, fabric = $10, color = $11, size = $12,
+            material = $13, featured = $14, stock = $15, is_active = $16, collection_id = $17,
+            is_rentable = $18, rental_base_price = $19, rental_price_per_day = $20,
+            minimum_rental_days = $21, maximum_rental_days = $22, rental_deposit = $23,
+            rental_available_stock = $24, updated_at = NOW()
+          WHERE id = $1
+        `, [
+          prod.id, prod.name, prod.slug, prod.description, prod.price, prod.compare_at_price,
+          prod.image, prod.images, prod.category, prod.fabric, prod.color, prod.size, prod.material,
+          prod.featured, prod.stock, prod.is_active, prod.collection_id, prod.is_rentable,
+          prod.rental_base_price, prod.rental_price_per_day, prod.minimum_rental_days,
+          prod.maximum_rental_days, prod.rental_deposit, prod.rental_available_stock
+        ]);
+      } else {
+        await q(`
+          INSERT INTO products (
+            id, name, slug, description, price, compare_at_price, image, images, category,
+            fabric, color, size, material, featured, stock, is_active, collection_id,
+            is_rentable, rental_base_price, rental_price_per_day, minimum_rental_days,
+            maximum_rental_days, rental_deposit, rental_available_stock, created_at, updated_at
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
+            $18, $19, $20, $21, $22, $23, $24, NOW(), NOW()
+          )
+        `, [
+          prod.id, prod.name, prod.slug, prod.description, prod.price, prod.compare_at_price,
+          prod.image, prod.images, prod.category, prod.fabric, prod.color, prod.size, prod.material,
+          prod.featured, prod.stock, prod.is_active, prod.collection_id, prod.is_rentable,
+          prod.rental_base_price, prod.rental_price_per_day, prod.minimum_rental_days,
+          prod.maximum_rental_days, prod.rental_deposit, prod.rental_available_stock
+        ]);
+      }
+    }
+  } catch (err) {
+    console.warn('[Database Notice] syncRealProducts notice:', err.message);
   }
 }
 

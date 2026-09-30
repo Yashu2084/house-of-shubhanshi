@@ -56,7 +56,7 @@ export default function ProductDetailPage() {
       <main style={{ paddingTop: '150px', minHeight: '80vh', textAlign: 'center', backgroundColor: 'var(--ivory)' }}>
         <p style={{ fontFamily: 'var(--font-serif)', fontSize: '1.6rem', color: 'var(--gold)' }}>✦</p>
         <p style={{ color: 'var(--text-brown)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Opening atelier garment portfolio...
+          Loading outfit details...
         </p>
       </main>
     );
@@ -66,10 +66,10 @@ export default function ProductDetailPage() {
     return (
       <main style={{ paddingTop: '150px', minHeight: '80vh', textAlign: 'center', backgroundColor: 'var(--ivory)' }}>
         <h2 className="font-serif" style={{ fontSize: '1.8rem', color: 'var(--brown-dark)', marginBottom: '14px' }}>
-          GARMENT NOT FOUND
+          OUTFIT NOT FOUND
         </h2>
         <p style={{ color: 'var(--text-brown)', marginBottom: '24px' }}>
-          The requested creation is either vaulted or no longer available.
+          The requested piece is currently unavailable or has been archived.
         </p>
         <Link href="/shop" className="btn btn-gold">
           RETURN TO SHOP
@@ -123,14 +123,14 @@ export default function ProductDetailPage() {
               />
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-brown)', fontStyle: 'italic', marginTop: '12px' }}>
-              ✦ Click image to inspect complete silhouette and handcrafted embroidery
+              ✦ Click image to inspect complete garment and embroidery
             </p>
           </div>
 
           {/* Garment Details & Actions */}
           <div style={{ background: 'var(--white)', border: '1px solid var(--gold-border)', padding: 'clamp(24px, 4vw, 40px)' }}>
             <span style={{ fontSize: '0.72rem', letterSpacing: '0.2em', color: 'var(--gold)', textTransform: 'uppercase', fontWeight: 600 }}>
-              {product.category || 'HANDCRAFTED COUTURE'}
+              {product.category || 'OCCASION WEAR'}
             </span>
             <h1 className="font-serif" style={{ fontSize: 'clamp(2rem, 3.5vw, 2.8rem)', color: 'var(--brown-dark)', margin: '8px 0 12px' }}>
               {product.name}
@@ -144,14 +144,14 @@ export default function ProductDetailPage() {
                   className={`rental-mode-btn ${mode === 'BUY' ? 'active' : ''}`}
                   onClick={() => setMode('BUY')}
                 >
-                  ✦ BUY PIECE (PERMANENT)
+                  ✦ BUY OUTFIT
                 </button>
                 <button
                   type="button"
                   className={`rental-mode-btn ${mode === 'RENT' ? 'active' : ''}`}
                   onClick={() => setMode('RENT')}
                 >
-                  ✧ RENT PIECE (1–7+ DAYS)
+                  ✧ RENT (2–14 DAYS)
                 </button>
               </div>
             )}
@@ -186,7 +186,7 @@ export default function ProductDetailPage() {
                   )}
                   <div className="modal-detail-item">
                     <span className="modal-detail-label">Delivery</span>
-                    <span className="modal-detail-val">Bespoke Handcrafting (3–4 Weeks)</span>
+                    <span className="modal-detail-val">Dispatched in 2–4 Business Days</span>
                   </div>
                 </div>
 

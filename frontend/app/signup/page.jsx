@@ -27,7 +27,7 @@ function SignupFormContent() {
     e.preventDefault();
 
     if (!name.trim() || name.trim().length < 2) {
-      setError('Please provide your full legal name (minimum 2 characters).');
+      setError('Please provide your full name (minimum 2 characters).');
       return;
     }
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -55,7 +55,7 @@ function SignupFormContent() {
       const user = await signup({
         name: name.trim(),
         email: email.trim().toLowerCase(),
-        phone: phone.trim(),
+        phone: phone ? phone.trim() : null,
         dob: dob || null,
         password,
         confirmPassword
@@ -65,7 +65,7 @@ function SignupFormContent() {
       router.push(redirectTarget || '/customer');
     } catch (err) {
       console.error('Signup error:', err);
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(err.message || 'Registration failed. Please check your details and try again.');
     } finally {
       setLoading(false);
     }
@@ -74,11 +74,11 @@ function SignupFormContent() {
   return (
     <div className="auth-card">
       <div className="auth-header">
-        <span className="section-tag">PRIVATE ATELIER CLIENTELE</span>
-        <h1 className="auth-title">CREATE PRIVATE ACCOUNT</h1>
+        <span className="section-tag">NEW CUSTOMER</span>
+        <h1 className="auth-title">CREATE AN ACCOUNT</h1>
         <div className="gold-divider"><span className="gold-divider-diamond"></span></div>
         <p className="auth-subtitle">
-          Begin your private bespoke chronicle. Reserve heirloom couture rentals, enjoy made-to-measure fittings, and view order delivery tracking.
+          Join House of Shubhanshi to save your favorite styles, place orders, and manage dress rentals.
         </p>
       </div>
 
@@ -90,12 +90,12 @@ function SignupFormContent() {
 
       <form onSubmit={handleSubmit} className="auth-form" noValidate>
         <div className="form-group">
-          <label className="form-label" htmlFor="signupName">Full Legal Name *</label>
+          <label className="form-label" htmlFor="signupName">Full Name *</label>
           <input
             type="text"
             id="signupName"
             className="form-input"
-            placeholder="e.g. Princess Shubha Singh"
+            placeholder="e.g. Shubha Sharma"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -109,7 +109,7 @@ function SignupFormContent() {
             type="email"
             id="signupEmail"
             className="form-input"
-            placeholder="patron@domain.com"
+            placeholder="name@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -119,21 +119,20 @@ function SignupFormContent() {
 
         <div className="form-row-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
           <div className="form-group">
-            <label className="form-label" htmlFor="signupPhone">Contact Phone *</label>
+            <label className="form-label" htmlFor="signupPhone">Phone Number</label>
             <input
               type="tel"
               id="signupPhone"
               className="form-input"
-              placeholder="+91 9560011351"
+              placeholder="+91 98765 43210"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              required
               autoComplete="tel"
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="signupDob">Date of Birth</label>
+            <label className="form-label" htmlFor="signupDob">Date of Birth (Optional)</label>
             <input
               type="date"
               id="signupDob"
@@ -175,7 +174,7 @@ function SignupFormContent() {
         </div>
 
         <p className="form-hint" style={{ fontSize: '0.74rem', color: 'var(--text-brown)', margin: '4px 0 16px' }}>
-          By creating an account, you agree to House of Shubhanshi&apos;s Private Salon terms and rental care charters.
+          By creating an account, you agree to our terms of service and dress rental guidelines.
         </p>
 
         <button
@@ -188,7 +187,7 @@ function SignupFormContent() {
         </button>
 
         <div className="auth-footer" style={{ textAlign: 'center', marginTop: '24px', fontSize: '0.85rem', color: 'var(--text-brown)' }}>
-          <span>Already hold a private membership? </span>
+          <span>Already have an account? </span>
           <Link
             href={`/login${redirectTarget ? `?redirect=${encodeURIComponent(redirectTarget)}` : ''}`}
             className="auth-link"

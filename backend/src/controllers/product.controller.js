@@ -16,15 +16,14 @@ async function getAll(req, res, next) {
 async function getOne(req, res, next) {
   try {
     const { id } = req.params;
-    let product;
-    if (id.startsWith('prod_') || id.length > 20) {
+    let product = null;
+    try {
       product = await productService.getProductById(id);
-    } else {
-      try {
-        product = await productService.getProductBySlug(id);
-      } catch (e) {
-        product = await productService.getProductById(id);
-      }
+    } catch (e) {
+      // If not found by ID, attempt lookup by slug
+    }
+    if (!product) {
+      product = await productService.getProductBySlug(id);
     }
     return sendSuccess(res, product);
   } catch (err) {

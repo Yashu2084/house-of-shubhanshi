@@ -47,11 +47,11 @@ export default function ShopPage() {
       <div className="container">
         {/* Page Header */}
         <div className="section-header reveal-init reveal-active" style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <span className="section-tag">ATELIER CATALOG &amp; RENTAL SALON</span>
+          <span className="section-tag">COLLECTION &amp; RENTALS</span>
           <h1 className="section-title">THE HOUSE OF SHUBHANSHI</h1>
           <div className="gold-divider"><span className="gold-divider-diamond"></span></div>
           <p className="section-subtitle">
-            &ldquo;Acquire timeless heirlooms for permanent devotion, or reserve bespoke rentals for private celebrations.&rdquo;
+            Thoughtfully designed Indian occasion wear available to purchase or rent for your celebrations.
           </p>
         </div>
 
@@ -59,7 +59,7 @@ export default function ShopPage() {
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-brown)' }}>
             <p style={{ fontFamily: 'var(--font-serif)', fontSize: '1.8rem', color: 'var(--gold)', marginBottom: '12px' }}>✦</p>
             <p style={{ letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '0.85rem' }}>
-              Unfolding the House of Shubhanshi atelier archive...
+              Loading the collection...
             </p>
           </div>
         ) : error ? (

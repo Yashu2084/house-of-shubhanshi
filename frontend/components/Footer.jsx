@@ -17,7 +17,7 @@ export default function Footer() {
       return;
     }
     setSubscribed(true);
-    showToast('Welcome to the House of Shubhanshi. You are now subscribed to our private chronicle.');
+    showToast('Welcome to House of Shubhanshi. Thank you for subscribing.');
     setEmail('');
   };
 
@@ -38,7 +38,7 @@ export default function Footer() {
             <h3 className="footer-brand-title">HOUSE OF SHUBHANSHI</h3>
             <span className="footer-brand-tagline">✦ WEAR THE DREAM ✦</span>
             <p className="footer-brand-desc">
-              &ldquo;Rooted in Indian craftsmanship, created for the modern dreamer.&rdquo;
+              Thoughtfully designed Indian wear, made to feel as beautiful as it looks.
             </p>
           </div>
 

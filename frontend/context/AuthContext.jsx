@@ -9,19 +9,18 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Requirement 17 & 24: /api/auth/me identifies user and sets authLoading = false
   const refreshUser = useCallback(async () => {
     try {
+      setLoading(true);
       const res = await api.get('/auth/me');
-      if (res && res.success && res.user) {
-        setUser(res.user);
-      } else if (res && res.data && res.data.user) {
-        setUser(res.data.user);
-      } else {
-        setUser(null);
-      }
+      const currentUser = (res && res.user) || (res && res.data && res.data.user) || null;
+      setUser(currentUser);
+      return currentUser;
     } catch (err) {
       // 401 unauthenticated is expected when not logged in
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -31,33 +30,55 @@ export function AuthProvider({ children }) {
     refreshUser();
   }, [refreshUser]);
 
+  // Requirement 17: Immediately call GET /api/auth/me after successful login
   const login = async (email, password, rememberMe = false) => {
-    const res = await api.post('/auth/login', { email, password, rememberMe });
-    if (res && res.success) {
-      const loggedUser = (res.data && res.data.user) || res.user;
-      setUser(loggedUser);
-      return loggedUser;
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/login', { email, password, rememberMe });
+      if (res && res.success) {
+        // Immediately verify backend session cookie via /api/auth/me
+        const meRes = await api.get('/auth/me');
+        const verifiedUser = (meRes && (meRes.user || (meRes.data && meRes.data.user)))
+          || (res.data && res.data.user)
+          || res.user;
+        setUser(verifiedUser);
+        return verifiedUser;
+      }
+      throw new Error(res?.message || 'Email or password is incorrect. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    throw new Error(res?.message || 'Login failed');
   };
 
+  // Requirement 19: Customer Signup followed by immediate session verification
   const signup = async (payload) => {
-    const res = await api.post('/auth/signup', payload);
-    if (res && res.success) {
-      const newUser = (res.data && res.data.user) || res.user;
-      setUser(newUser);
-      return newUser;
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/signup', payload);
+      if (res && res.success) {
+        // Immediately verify backend session cookie via /api/auth/me
+        const meRes = await api.get('/auth/me');
+        const verifiedUser = (meRes && (meRes.user || (meRes.data && meRes.data.user)))
+          || (res.data && res.data.user)
+          || res.user;
+        setUser(verifiedUser);
+        return verifiedUser;
+      }
+      throw new Error(res?.message || 'Registration failed. Please check your details.');
+    } finally {
+      setLoading(false);
     }
-    throw new Error(res?.message || 'Signup failed');
   };
 
   const logout = async () => {
+    setLoading(true);
     try {
       await api.post('/auth/logout');
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
       setUser(null);
+      setLoading(false);
     }
   };
 

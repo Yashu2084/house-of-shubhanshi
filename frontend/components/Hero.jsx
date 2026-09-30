@@ -40,17 +40,17 @@ export default function Hero() {
       {/* Warm Brown Subtle Tint Overlay */}
       <div className="hero-overlay"></div>
 
-      {/* Hero Cinematic Editorial Content */}
+      {/* Hero Content */}
       <div className="hero-content">
         <span className="hero-tag reveal-init reveal-active">HOUSE OF SHUBHANSHI</span>
         <h1 className="hero-title reveal-init delay-1 reveal-active">WEAR THE DREAM</h1>
-        <p className="hero-tagline reveal-init delay-2 reveal-active">
-          &ldquo;Where tradition meets timeless elegance.&rdquo;
+        <p className="hero-tagline reveal-init delay-2 reveal-active" style={{ maxWidth: '640px', margin: '0 auto 28px', fontSize: 'clamp(1rem, 1.8vw, 1.25rem)', lineHeight: 1.6, color: '#FDFBF7' }}>
+          Thoughtfully designed Indian wear, made to feel as beautiful as it looks.
         </p>
 
         <div className="hero-cta-group reveal-init delay-3 reveal-active">
           <Link href="/shop" className="btn btn-gold">
-            EXPLORE COLLECTION <span className="btn-arrow">&rarr;</span>
+            EXPLORE THE COLLECTION <span className="btn-arrow">&rarr;</span>
           </Link>
         </div>
       </div>
