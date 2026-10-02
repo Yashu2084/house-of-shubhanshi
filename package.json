@@ -12,7 +12,8 @@
     "frontend:build": "npm --prefix frontend run build",
     "frontend:start": "npm --prefix frontend run start",
     "db:init": "node backend/src/config/initDb.js",
-    "seed": "node backend/src/config/initDb.js"
+    "seed": "node backend/src/config/initDb.js",
+    "admin:create": "node backend/src/scripts/create-admin.js"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.14",

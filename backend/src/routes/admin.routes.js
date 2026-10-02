@@ -43,4 +43,10 @@ router.post('/collections', collectionController.create);
 router.put('/collections/:id', collectionController.update);
 router.delete('/collections/:id', collectionController.remove);
 
+// Image Upload & Optimization
+router.post('/upload', adminController.uploadProductImage);
+
+// Account & Security
+router.post('/change-password', adminController.changeAdminPassword);
+
 module.exports = router;

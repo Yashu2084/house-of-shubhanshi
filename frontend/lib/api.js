@@ -2,11 +2,18 @@
 // HOUSE OF SHUBHANSHI — CENTRALIZED API CLIENT
 // ==============================================================================
 
-// In browser, ALWAYS use relative '/api' so cookies are first-party and proxy via Next.js rewrites
+// In browser, ALWAYS use relative '/api' so cookies are first-party and proxy via Next.js rewrites / route handlers
 // In SSR (server-side), route directly to backend host without exposing to client
 const API_BASE = typeof window !== 'undefined'
   ? '/api'
-  : ((process.env.BACKEND_URL || process.env.INTERNAL_API_URL || 'http://localhost:3001').replace(/\/$/, '') + '/api');
+  : ((
+      process.env.BACKEND_URL ||
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.API_URL ||
+      process.env.INTERNAL_API_URL ||
+      'http://localhost:3001'
+    ).trim().replace(/\/$/, '') + '/api');
 
 async function request(endpoint, options = {}) {
   // Normalize endpoint to prevent double /api/api

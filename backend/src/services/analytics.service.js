@@ -24,15 +24,18 @@ async function getAdminOverview() {
   const totalProducts = allProducts.length;
   const activeProducts = allProducts.filter(p => p.isActive).length;
   const activeCollections = allCollections.filter(c => c.isActive).length;
-  const pendingOrders = allOrders.filter(o => ['RECEIVED', 'DISPATCHED', 'OUT_FOR_DELIVERY'].includes(o.status)).length;
+  
+  const whatsappEnquiries = allOrders.filter(o => o.status === 'WHATSAPP_ENQUIRY' || o.status === 'PENDING_WHATSAPP_CONFIRMATION').length;
+  const pendingOrders = allOrders.filter(o => ['WHATSAPP_ENQUIRY', 'RECEIVED', 'CONFIRMED', 'DISPATCHED', 'OUT_FOR_DELIVERY'].includes(o.status)).length;
 
   const allRentals = await db.rental.findMany();
   const activeRentals = allRentals.filter(r => r.status === 'ACTIVE' || r.status === 'RESERVED').length;
+  const pendingRentals = allRentals.filter(r => ['RESERVED', 'ACTIVE', 'RETURN_PENDING'].includes(r.status)).length;
   const overdueRentals = allRentals.filter(r => r.status === 'OVERDUE').length;
   const heldDeposits = allRentals.filter(r => r.depositStatus === 'HELD').reduce((s, r) => s + (r.securityDeposit || 0), 0);
   const totalRentals = allRentals.length;
 
-  const recentOrders = allOrders.slice(0, 8);
+  const recentOrders = allOrders.slice(0, 10);
 
   return {
     totalSales,
@@ -42,10 +45,14 @@ async function getAdminOverview() {
     activeProducts,
     activeCollections,
     pendingOrders,
+    pendingRentals,
+    whatsappEnquiries,
+    totalRentals,
     recentOrders,
     rentals: {
       total: totalRentals,
       active: activeRentals,
+      pending: pendingRentals,
       overdue: overdueRentals,
       heldDeposits
     }
@@ -66,9 +73,9 @@ async function getSalesAnalytics(timeRange = '30d') {
 
   if (timeRange === 'today') {
     startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  } else if (timeRange === '7d') {
+  } else if (timeRange === '7d' || timeRange === 'week') {
     startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  } else if (timeRange === '30d') {
+  } else if (timeRange === '30d' || timeRange === 'month') {
     startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   } else if (timeRange === 'year') {
     startDate = new Date(now.getFullYear(), 0, 1);
@@ -84,12 +91,24 @@ async function getSalesAnalytics(timeRange = '30d') {
   const averageOrderValue = orderCount > 0 ? Math.round(totalRevenue / orderCount) : 0;
 
   let productsSold = 0;
+  let purchaseRevenue = 0;
+  let rentalRevenue = 0;
+  let rentalCount = 0;
+
   filteredOrders.forEach(o => {
+    let orderHasRental = false;
     if (o.items && Array.isArray(o.items)) {
       o.items.forEach(it => {
         productsSold += it.quantity || 1;
+        if (it.purchaseType === 'RENT') {
+          orderHasRental = true;
+          rentalRevenue += ((parseFloat(it.price) || 0) * (it.quantity || 1));
+        } else {
+          purchaseRevenue += ((parseFloat(it.price) || 0) * (it.quantity || 1));
+        }
       });
     }
+    if (orderHasRental) rentalCount += 1;
   });
 
   // Group by timeline for sales over time chart
@@ -112,7 +131,10 @@ async function getSalesAnalytics(timeRange = '30d') {
   return {
     timeRange,
     totalRevenue,
+    purchaseRevenue,
+    rentalRevenue,
     orderCount,
+    rentalCount,
     averageOrderValue,
     productsSold,
     chartData

@@ -6,6 +6,9 @@ const db = require('../config/db');
 const { calculateRentalEndDate, formatDate } = require('./rental.service');
 
 const ALLOWED_ORDER_STATUSES = [
+  'WHATSAPP_ENQUIRY',
+  'PENDING_WHATSAPP_CONFIRMATION',
+  'CONFIRMED',
   'RECEIVED',
   'DISPATCHED',
   'OUT_FOR_DELIVERY',
@@ -14,6 +17,7 @@ const ALLOWED_ORDER_STATUSES = [
 ];
 
 const ALLOWED_PAYMENT_STATUSES = [
+  'WHATSAPP_ENQUIRY',
   'PENDING',
   'COD',
   'PAID'
@@ -201,15 +205,19 @@ async function createOrder(userId, orderData) {
       }
     }
 
-    const paymentStatus = paymentMethod === 'COD' ? 'COD' : (paymentMethod === 'PAID' ? 'PAID' : 'PENDING');
+    const isWhatsApp = !paymentMethod || paymentMethod === 'WHATSAPP' || paymentMethod === 'WHATSAPP_ENQUIRY';
+    const initialStatus = isWhatsApp ? 'WHATSAPP_ENQUIRY' : (orderData.status || 'RECEIVED');
+    const paymentStatus = isWhatsApp
+      ? 'WHATSAPP_ENQUIRY'
+      : (paymentMethod === 'COD' ? 'COD' : (paymentMethod === 'PAID' ? 'PAID' : 'PENDING'));
     const orderId = `ord_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
 
     // 1. Insert Order (including rental_deposit_total)
     const orderRes = await tx.query(
       `INSERT INTO orders (id, order_number, user_id, total_amount, rental_deposit_total, status, payment_status, shipping_address, phone, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, 'RECEIVED', $6, $7, $8, NOW(), NOW())
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
        RETURNING *`,
-      [orderId, orderNumber, userId, totalAmount, rentalDepositTotal, paymentStatus, shippingAddress.trim(), phone.trim()]
+      [orderId, orderNumber, userId, totalAmount, rentalDepositTotal, initialStatus, paymentStatus, shippingAddress.trim(), phone.trim()]
     );
 
     const createdOrder = orderRes.rows[0];

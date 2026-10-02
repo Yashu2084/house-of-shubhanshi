@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Hero from '../components/Hero';
 import ProductModal from '../components/ProductModal';
 import { useLightbox } from '../components/ImageLightbox';
@@ -163,12 +164,16 @@ export default function HomePage() {
           <div className="story-grid">
             <div className="story-image-wrap reveal-init reveal-active">
               <div className="story-arch">
-                <img
-                  src="/assets/images/story/our-story.jpg"
+                <Image
+                  src="/assets/images/story/our-story.webp"
                   alt="House of Shubhanshi Design Story"
+                  width={600}
+                  height={800}
+                  sizes="(max-width: 768px) 100vw, 500px"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/story/our-story.jpg', 'Design Story')}
-                  style={{ cursor: 'zoom-in' }}
+                  decoding="async"
+                  onClick={() => openLightbox('/assets/images/story/our-story.webp', 'Design Story')}
+                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="story-arch-badge">
@@ -214,13 +219,17 @@ export default function HomePage() {
 
           <div className="future-collage">
             <div className="future-card featured reveal-init reveal-active">
-              <div className="future-img-wrap" style={{ minHeight: '480px' }}>
-                <img
-                  src="/assets/images/future/future-01.jpg"
+              <div className="future-img-wrap">
+                <Image
+                  src="/assets/images/future/future-01.webp"
                   alt="Celebration Silhouettes"
+                  width={600}
+                  height={800}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 450px"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/future/future-01.jpg', 'Celebration Silhouettes')}
-                  style={{ cursor: 'zoom-in' }}
+                  decoding="async"
+                  onClick={() => openLightbox('/assets/images/future/future-01.webp', 'Celebration Silhouettes')}
+                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="future-card-content">
@@ -232,12 +241,16 @@ export default function HomePage() {
 
             <div className="future-card reveal-init delay-1 reveal-active">
               <div className="future-img-wrap">
-                <img
-                  src="/assets/images/future/future-02.jpg"
+                <Image
+                  src="/assets/images/future/future-02.webp"
                   alt="Rich Tones & Details"
+                  width={800}
+                  height={600}
+                  sizes="(max-width: 768px) 100vw, 400px"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/future/future-02.jpg', 'Rich Tones & Detailing')}
-                  style={{ cursor: 'zoom-in' }}
+                  decoding="async"
+                  onClick={() => openLightbox('/assets/images/future/future-02.webp', 'Rich Tones & Detailing')}
+                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="future-card-content">
@@ -256,12 +269,16 @@ export default function HomePage() {
 
             <div className="future-card reveal-init delay-3 reveal-active">
               <div className="future-img-wrap">
-                <img
-                  src="/assets/images/future/future-03.jpg"
+                <Image
+                  src="/assets/images/future/future-03.webp"
                   alt="The Design Process"
+                  width={800}
+                  height={600}
+                  sizes="(max-width: 768px) 100vw, 400px"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/future/future-03.jpg', 'The Design Process')}
-                  style={{ cursor: 'zoom-in' }}
+                  decoding="async"
+                  onClick={() => openLightbox('/assets/images/future/future-03.webp', 'The Design Process')}
+                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="future-card-content">
@@ -288,12 +305,16 @@ export default function HomePage() {
             {/* Chapter 01 */}
             <article className="piece-row reveal-init reveal-active">
               <div className="piece-visual">
-                <img
-                  src="/assets/images/pieces/piece-01-beginning.jpg"
+                <Image
+                  src="/assets/images/pieces/piece-01-beginning.webp"
                   alt="The Beginning - Thoughtful Design"
+                  width={600}
+                  height={800}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 550px"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/pieces/piece-01-beginning.jpg', 'Thoughtful Design')}
-                  style={{ cursor: 'zoom-in' }}
+                  decoding="async"
+                  onClick={() => openLightbox('/assets/images/pieces/piece-01-beginning.webp', 'Thoughtful Design')}
+                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="piece-text">
@@ -311,12 +332,16 @@ export default function HomePage() {
             {/* Chapter 02 */}
             <article className="piece-row reverse reveal-init reveal-active">
               <div className="piece-visual">
-                <img
-                  src="/assets/images/pieces/piece-02-craft.jpg"
+                <Image
+                  src="/assets/images/pieces/piece-02-craft.webp"
                   alt="The Details"
+                  width={600}
+                  height={800}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 550px"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/pieces/piece-02-craft.jpg', 'Refined Detailing')}
-                  style={{ cursor: 'zoom-in' }}
+                  decoding="async"
+                  onClick={() => openLightbox('/assets/images/pieces/piece-02-craft.webp', 'Refined Detailing')}
+                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="piece-text">
@@ -334,12 +359,16 @@ export default function HomePage() {
             {/* Chapter 03 */}
             <article className="piece-row reveal-init reveal-active">
               <div className="piece-visual">
-                <img
-                  src="/assets/images/pieces/piece-03-dream.jpg"
+                <Image
+                  src="/assets/images/pieces/piece-03-dream.webp"
                   alt="Your Celebration"
+                  width={600}
+                  height={800}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 550px"
                   loading="lazy"
-                  onClick={() => openLightbox('/assets/images/pieces/piece-03-dream.jpg', 'Your Celebration')}
-                  style={{ cursor: 'zoom-in' }}
+                  decoding="async"
+                  onClick={() => openLightbox('/assets/images/pieces/piece-03-dream.webp', 'Your Celebration')}
+                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="piece-text">

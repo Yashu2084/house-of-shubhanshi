@@ -43,6 +43,7 @@ async function initDb() {
         await pool.query(schemaSql);
         await seedDatabase(pool);
         await migrateRentals(pool);
+        await migrateOrderStatusConstraints(pool);
         await syncRealProducts(pool);
         return;
       }
@@ -69,6 +70,7 @@ async function initDb() {
     await pgliteInstance.exec(schemaSql);
     await seedDatabase(pgliteInstance);
     await migrateRentals(pgliteInstance);
+    await migrateOrderStatusConstraints(pgliteInstance);
     await syncRealProducts(pgliteInstance);
   } catch (embeddedErr) {
     console.error('[Database Error] Failed to initialize embedded PostgreSQL:', embeddedErr);
@@ -563,6 +565,31 @@ async function syncRealProducts(executor) {
     }
   } catch (err) {
     console.warn('[Database Notice] syncRealProducts notice:', err.message);
+  }
+}
+
+async function migrateOrderStatusConstraints(client) {
+  try {
+    const q = (sql) => (client.exec ? client.exec(sql) : client.query(sql));
+    await q(`
+      DO $$
+      BEGIN
+        BEGIN
+          ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+          ALTER TABLE orders ADD CONSTRAINT orders_status_check CHECK (status IN ('WHATSAPP_ENQUIRY', 'PENDING_WHATSAPP_CONFIRMATION', 'CONFIRMED', 'RECEIVED', 'DISPATCHED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED'));
+        EXCEPTION WHEN OTHERS THEN
+          NULL;
+        END;
+        BEGIN
+          ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_payment_status_check;
+          ALTER TABLE orders ADD CONSTRAINT orders_payment_status_check CHECK (payment_status IN ('WHATSAPP_ENQUIRY', 'PENDING', 'COD', 'PAID'));
+        EXCEPTION WHEN OTHERS THEN
+          NULL;
+        END;
+      END $$;
+    `);
+  } catch (err) {
+    // Non-blocking if table was just created by schema.sql
   }
 }
 

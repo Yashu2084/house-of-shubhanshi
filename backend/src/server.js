@@ -40,6 +40,10 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
+    // Allow Vercel deployments and preview URLs
+    if (origin.endsWith('.vercel.app') || origin.includes('houseofshubhanshi')) {
+      return callback(null, true);
+    }
     // Allow local development variants
     if (env.NODE_ENV !== 'production' && (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))) {
       return callback(null, true);
