@@ -213,6 +213,17 @@ function getPgPool() {
       connectionTimeoutMillis: 4000,
       max: 10
     });
+
+    // Asynchronously ensure columns can hold long URLs or Base64 Data URIs
+    if (!isPostgresInitialized) {
+      isPostgresInitialized = true;
+      pgPool.query(`
+        ALTER TABLE IF EXISTS collections ALTER COLUMN image TYPE TEXT;
+        ALTER TABLE IF EXISTS products ALTER COLUMN image TYPE TEXT;
+        ALTER TABLE IF EXISTS products ALTER COLUMN images TYPE TEXT;
+      `).catch(() => {});
+    }
+
     return pgPool;
   } catch (err) {
     console.warn('[DB] Failed to initialize PostgreSQL pool:', err.message);
@@ -426,12 +437,14 @@ const db = {
     },
 
     async create({ data }) {
+      const pool = getPgPool();
       const store = loadMemStore();
       const id = data.id || `prod_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+      const slug = data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const newProd = {
         id,
         name: data.name,
-        slug: data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        slug,
         description: data.description || '',
         price: parseFloat(data.price) || 0,
         compareAtPrice: data.compareAtPrice ? parseFloat(data.compareAtPrice) : null,
@@ -455,12 +468,81 @@ const db = {
         rentalAvailableStock: parseInt(data.rentalAvailableStock, 10) || 1,
         createdAt: new Date().toISOString()
       };
+
+      if (pool) {
+        try {
+          await pool.query(
+            `INSERT INTO products (
+              id, name, slug, description, price, compare_at_price, image, images,
+              category, fabric, color, size, material, featured, stock, is_active,
+              collection_id, is_rentable, rental_base_price, rental_price_per_day,
+              minimum_rental_days, maximum_rental_days, rental_deposit, rental_available_stock,
+              created_at, updated_at
+            ) VALUES (
+              $1, $2, $3, $4, $5, $6, $7, $8,
+              $9, $10, $11, $12, $13, $14, $15, $16,
+              $17, $18, $19, $20,
+              $21, $22, $23, $24,
+              NOW(), NOW()
+            )`,
+            [
+              newProd.id, newProd.name, newProd.slug, newProd.description, newProd.price, newProd.compareAtPrice,
+              newProd.image, newProd.images, newProd.category, newProd.fabric, newProd.color, newProd.size,
+              newProd.material, newProd.featured, newProd.stock, newProd.isActive, newProd.collectionId,
+              newProd.isRentable, newProd.rentalBasePrice, newProd.rentalPricePerDay, newProd.minimumRentalDays,
+              newProd.maximumRentalDays, newProd.rentalDeposit, newProd.rentalAvailableStock
+            ]
+          );
+        } catch (pgErr) {
+          console.warn('[DB Product Create PG Error]', pgErr.message);
+        }
+      }
+
       store.products.unshift(newProd);
       saveMemStore();
       return newProd;
     },
 
     async update({ where, data }) {
+      const pool = getPgPool();
+      if (pool && where.id) {
+        try {
+          const fields = [];
+          const params = [];
+          let paramIdx = 1;
+
+          if (data.name !== undefined) { fields.push(`name = $${paramIdx++}`); params.push(data.name); }
+          if (data.description !== undefined) { fields.push(`description = $${paramIdx++}`); params.push(data.description); }
+          if (data.price !== undefined) { fields.push(`price = $${paramIdx++}`); params.push(parseFloat(data.price)); }
+          if (data.compareAtPrice !== undefined) { fields.push(`compare_at_price = $${paramIdx++}`); params.push(data.compareAtPrice ? parseFloat(data.compareAtPrice) : null); }
+          if (data.image !== undefined) { fields.push(`image = $${paramIdx++}`); params.push(data.image); }
+          if (data.category !== undefined) { fields.push(`category = $${paramIdx++}`); params.push(data.category); }
+          if (data.fabric !== undefined) { fields.push(`fabric = $${paramIdx++}`); params.push(data.fabric); }
+          if (data.color !== undefined) { fields.push(`color = $${paramIdx++}`); params.push(data.color); }
+          if (data.size !== undefined) { fields.push(`size = $${paramIdx++}`); params.push(data.size); }
+          if (data.material !== undefined) { fields.push(`material = $${paramIdx++}`); params.push(data.material); }
+          if (data.featured !== undefined) { fields.push(`featured = $${paramIdx++}`); params.push(!!data.featured); }
+          if (data.stock !== undefined) { fields.push(`stock = $${paramIdx++}`); params.push(parseInt(data.stock, 10)); }
+          if (data.isActive !== undefined) { fields.push(`is_active = $${paramIdx++}`); params.push(!!data.isActive); }
+          if (data.collectionId !== undefined) { fields.push(`collection_id = $${paramIdx++}`); params.push(data.collectionId); }
+          if (data.isRentable !== undefined) { fields.push(`is_rentable = $${paramIdx++}`); params.push(!!data.isRentable); }
+          if (data.rentalBasePrice !== undefined) { fields.push(`rental_base_price = $${paramIdx++}`); params.push(parseFloat(data.rentalBasePrice)); }
+          if (data.rentalPricePerDay !== undefined) { fields.push(`rental_price_per_day = $${paramIdx++}`); params.push(parseFloat(data.rentalPricePerDay)); }
+          if (data.minimumRentalDays !== undefined) { fields.push(`minimum_rental_days = $${paramIdx++}`); params.push(parseInt(data.minimumRentalDays, 10)); }
+          if (data.maximumRentalDays !== undefined) { fields.push(`maximum_rental_days = $${paramIdx++}`); params.push(parseInt(data.maximumRentalDays, 10)); }
+          if (data.rentalDeposit !== undefined) { fields.push(`rental_deposit = $${paramIdx++}`); params.push(parseFloat(data.rentalDeposit)); }
+          if (data.rentalAvailableStock !== undefined) { fields.push(`rental_available_stock = $${paramIdx++}`); params.push(parseInt(data.rentalAvailableStock, 10)); }
+
+          if (fields.length > 0) {
+            fields.push(`updated_at = NOW()`);
+            params.push(where.id);
+            await pool.query(`UPDATE products SET ${fields.join(', ')} WHERE id = $${paramIdx}`, params);
+          }
+        } catch (pgErr) {
+          console.warn('[DB Product Update PG Error]', pgErr.message);
+        }
+      }
+
       const store = loadMemStore();
       const idx = store.products.findIndex(p => p.id === where.id);
       if (idx !== -1) {
@@ -472,6 +554,15 @@ const db = {
     },
 
     async delete({ where }) {
+      const pool = getPgPool();
+      if (pool && where.id) {
+        try {
+          await pool.query('UPDATE products SET is_active = FALSE, updated_at = NOW() WHERE id = $1', [where.id]);
+        } catch (pgErr) {
+          console.warn('[DB Product Delete PG Error]', pgErr.message);
+        }
+      }
+
       const store = loadMemStore();
       const idx = store.products.findIndex(p => p.id === where.id);
       if (idx !== -1) {
@@ -494,23 +585,59 @@ const db = {
     },
 
     async create({ data }) {
+      const pool = getPgPool();
       const store = loadMemStore();
       const id = data.id || `col_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+      const slug = data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const newCol = {
         id,
         name: data.name,
-        slug: data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        slug,
         description: data.description || '',
         image: data.image || '/images/future/future-01.webp',
         isActive: data.isActive !== undefined ? !!data.isActive : true,
         createdAt: new Date().toISOString()
       };
+
+      if (pool) {
+        try {
+          await pool.query(
+            `INSERT INTO collections (id, name, slug, description, image, is_active, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
+            [newCol.id, newCol.name, newCol.slug, newCol.description, newCol.image, newCol.isActive]
+          );
+        } catch (pgErr) {
+          console.warn('[DB Collection Create PG Error]', pgErr.message);
+        }
+      }
+
       store.collections.push(newCol);
       saveMemStore();
       return newCol;
     },
 
     async update({ where, data }) {
+      const pool = getPgPool();
+      if (pool && where.id) {
+        try {
+          const fields = [];
+          const params = [];
+          let paramIdx = 1;
+          if (data.name !== undefined) { fields.push(`name = $${paramIdx++}`); params.push(data.name); }
+          if (data.description !== undefined) { fields.push(`description = $${paramIdx++}`); params.push(data.description); }
+          if (data.image !== undefined) { fields.push(`image = $${paramIdx++}`); params.push(data.image); }
+          if (data.isActive !== undefined) { fields.push(`is_active = $${paramIdx++}`); params.push(!!data.isActive); }
+
+          if (fields.length > 0) {
+            fields.push(`updated_at = NOW()`);
+            params.push(where.id);
+            await pool.query(`UPDATE collections SET ${fields.join(', ')} WHERE id = $${paramIdx}`, params);
+          }
+        } catch (pgErr) {
+          console.warn('[DB Collection Update PG Error]', pgErr.message);
+        }
+      }
+
       const store = loadMemStore();
       const idx = store.collections.findIndex(c => c.id === where.id);
       if (idx !== -1) {
@@ -522,6 +649,15 @@ const db = {
     },
 
     async delete({ where }) {
+      const pool = getPgPool();
+      if (pool && where.id) {
+        try {
+          await pool.query('UPDATE collections SET is_active = FALSE, updated_at = NOW() WHERE id = $1', [where.id]);
+        } catch (pgErr) {
+          console.warn('[DB Collection Delete PG Error]', pgErr.message);
+        }
+      }
+
       const store = loadMemStore();
       const idx = store.collections.findIndex(c => c.id === where.id);
       if (idx !== -1) {

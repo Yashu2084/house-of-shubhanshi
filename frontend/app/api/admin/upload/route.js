@@ -1,8 +1,17 @@
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '../../../../lib/auth';
+import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
 
+/**
+ * POST /api/admin/upload
+ * Secured administrator upload handler with sharp WebP optimization
+ * Compatible with Vercel Serverless (Node.js runtime) and local development.
+ */
 export async function POST(req) {
   try {
     const { user, errorResponse } = await requireAdmin(req);
@@ -19,7 +28,7 @@ export async function POST(req) {
       );
     }
 
-    // Extract base64 payload
+    // Extract raw buffer from base64 payload
     const matches = imagePayload.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
     let buffer;
     if (matches && matches.length === 3) {
@@ -34,41 +43,63 @@ export async function POST(req) {
       .toLowerCase();
     const finalFilename = `${safeName}-${Date.now()}.webp`;
 
-    let dataUri = imagePayload.startsWith('data:') ? imagePayload : `data:image/webp;base64,${buffer.toString('base64')}`;
-    let relativeUrl = `/images/products/${finalFilename}`;
+    // Process & optimize image with sharp:
+    // Resize to luxury e-commerce proportions (max 1200x1600 inside), convert to high-fidelity WebP
+    const outBuffer = await sharp(buffer)
+      .resize({ width: 1200, height: 1600, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 82, effort: 4 })
+      .toBuffer();
 
-    // Try Sharp optimization if available, or write directly
-    try {
-      const sharp = require('sharp');
-      const outBuffer = await sharp(buffer)
-        .resize({ width: 1200, height: 1600, fit: 'inside', withoutEnlargement: true })
-        .webp({ quality: 84 })
-        .toBuffer();
+    const dataUri = `data:image/webp;base64,${outBuffer.toString('base64')}`;
+    let finalUrl = dataUri;
 
-      dataUri = `data:image/webp;base64,${outBuffer.toString('base64')}`;
+    // 1. Persistent Storage Option A: Vercel Blob Storage (if BLOB_READ_WRITE_TOKEN is configured)
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      try {
+        const { put } = await import('@vercel/blob');
+        const blob = await put(`products/${finalFilename}`, outBuffer, {
+          access: 'public',
+          contentType: 'image/webp'
+        });
+        if (blob && blob.url) {
+          finalUrl = blob.url;
+        }
+      } catch (blobErr) {
+        console.warn('[Upload] Vercel Blob put failed, falling back to persistent data URI:', blobErr.message);
+      }
+    }
 
-      const publicPath = path.resolve(process.cwd(), 'public/images/products');
-      if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath, { recursive: true });
-      fs.writeFileSync(path.join(publicPath, finalFilename), outBuffer);
-    } catch (e) {
-      // In serverless / read-only environment, fallback to data URI
-      relativeUrl = dataUri;
+    // 2. Local filesystem write for dev convenience (non-blocking if read-only / serverless)
+    if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+      try {
+        const publicPath = path.resolve(process.cwd(), 'public/images/products');
+        if (!fs.existsSync(publicPath)) {
+          fs.mkdirSync(publicPath, { recursive: true });
+        }
+        fs.writeFileSync(path.join(publicPath, finalFilename), outBuffer);
+        // In local development with filesystem access, use relative URL if not using Blob
+        if (!process.env.BLOB_READ_WRITE_TOKEN) {
+          finalUrl = `/images/products/${finalFilename}`;
+        }
+      } catch (fsErr) {
+        // Read-only filesystem; finalUrl remains dataUri
+      }
     }
 
     return NextResponse.json({
       success: true,
       message: 'Product image uploaded and processed successfully',
       data: {
-        url: relativeUrl,
+        url: finalUrl,
         dataUri,
         filename: finalFilename,
-        size: buffer.length
+        size: outBuffer.length
       }
     });
   } catch (err) {
     console.error('[API /api/admin/upload POST Error]', err);
     return NextResponse.json(
-      { success: false, message: 'Failed to upload product image' },
+      { success: false, message: err.message || 'Failed to upload product image' },
       { status: 500 }
     );
   }

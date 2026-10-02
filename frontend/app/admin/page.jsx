@@ -158,15 +158,49 @@ export default function AdminDashboardPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 12 * 1024 * 1024) {
-      alert('Image file size must be less than 12MB');
+    if (file.size > 15 * 1024 * 1024) {
+      alert('Image file size must be less than 15MB');
       return;
     }
 
     setUploadingImage(true);
     const reader = new FileReader();
     reader.onload = async () => {
-      const base64 = reader.result;
+      let base64 = reader.result;
+
+      // For large high-res camera photos (> 2MB), pre-scale on canvas to ensure request is under Vercel's 4.5MB payload limit
+      if (file.size > 2 * 1024 * 1024) {
+        try {
+          base64 = await new Promise((resolve) => {
+            const img = document.createElement('img');
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              let width = img.naturalWidth || img.width;
+              let height = img.naturalHeight || img.height;
+              const maxDim = 1800;
+              if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                  height = Math.round((height * maxDim) / width);
+                  width = maxDim;
+                } else {
+                  width = Math.round((width * maxDim) / height);
+                  height = maxDim;
+                }
+              }
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', 0.88));
+            };
+            img.onerror = () => resolve(reader.result);
+            img.src = reader.result;
+          });
+        } catch (canvasErr) {
+          // Fall back to original base64 if canvas is unavailable
+        }
+      }
+
       try {
         const res = await api.post('/admin/upload', {
           imageBase64: base64,
