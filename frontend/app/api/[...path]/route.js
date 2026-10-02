@@ -13,15 +13,30 @@ function getBackendBaseUrl() {
     process.env.NEXT_PUBLIC_API_URL ||
     process.env.API_URL ||
     process.env.INTERNAL_API_URL ||
-    'http://localhost:3001'
+    ''
   ).trim().replace(/\/$/, '');
-  return url;
+
+  const isLocal = !url || url.includes('localhost') || url.includes('127.0.0.1');
+  if (process.env.NODE_ENV === 'production' && isLocal) {
+    return null;
+  }
+  return url || 'http://localhost:3001';
 }
 
 async function handleProxy(req, { params }) {
   const backendBase = getBackendBaseUrl();
   const pathSegments = params?.path || [];
   const subPath = Array.isArray(pathSegments) ? pathSegments.join('/') : pathSegments;
+
+  if (!backendBase) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: `API endpoint /api/${subPath} not found.`
+      },
+      { status: 404 }
+    );
+  }
 
   // Extract query string from request URL
   const { search } = new URL(req.url);

@@ -1007,22 +1007,28 @@ ul {
 .story-arch {
   position: relative;
   width: 100%;
-  height: 580px;
-  border-radius: 190px 190px 0 0;
+  max-width: 100%;
+  aspect-ratio: 4 / 5;
+  height: auto;
+  border-radius: 190px 190px 16px 16px;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
   z-index: 2;
+  display: block;
 }
 
-.story-arch img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.story-arch img,
+.story-arch-img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
   transition: transform var(--transition-slow);
 }
 
 .story-image-wrap:hover .story-arch img {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 /* Story Badge */
@@ -4135,24 +4141,51 @@ body.page-transitioning {
     font-size: 1.05rem;
   }
 
-  /* Our Story Split */
+  /* Our Story Split: Text on Top, Image on Bottom */
   .story-grid {
-    grid-template-columns: 1fr;
-    gap: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+    align-items: center;
   }
 
   .story-content {
+    order: 1;
     padding-right: 0;
     text-align: center;
+    width: 100%;
+    max-width: 600px;
   }
 
   .story-image-wrap {
-    max-width: 440px;
+    order: 2;
+    width: 100%;
+    max-width: 420px;
     margin: 0 auto;
+    padding: 0;
+    position: relative;
+    display: block;
+  }
+
+  .story-image-wrap::before {
+    display: none; /* Prevent horizontal overflow on tablet/mobile */
   }
 
   .story-arch {
-    height: 420px;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    border-radius: 140px 140px 14px 14px;
+    display: block;
+  }
+
+  .story-arch-badge {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    padding: 10px 16px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
   }
 
   .gold-accent-line {
@@ -4331,24 +4364,35 @@ body.page-transitioning {
     font-size: 1.35rem;
   }
 
-  /* Story Arch */
-  .story-arch {
-    height: 350px;
-    border-radius: 140px 140px 0 0;
+  /* Our Story Mobile (320px - 480px) */
+  .story-grid {
+    gap: 28px;
   }
 
-  .story-image-wrap::before {
-    border-radius: 150px 150px 0 0;
+  .story-image-wrap {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  .story-arch {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    border-radius: 120px 120px 12px 12px;
+    display: block;
   }
 
   .story-arch-badge {
-    padding: 12px 16px;
-    bottom: 16px;
-    right: 0px;
+    padding: 8px 14px;
+    bottom: 12px;
+    right: 12px;
   }
 
   .story-arch-badge .badge-year {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
   }
 
   .story-lead {

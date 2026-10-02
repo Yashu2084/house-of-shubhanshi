@@ -172,6 +172,7 @@ export default function HomePage() {
                   sizes="(max-width: 768px) 100vw, 500px"
                   loading="lazy"
                   decoding="async"
+                  className="story-arch-img"
                   onClick={() => openLightbox('/assets/images/story/our-story.webp', 'Design Story')}
                   style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
                 />

@@ -72,6 +72,7 @@ app.use('/icons', express.static(path.join(frontendPublicDir, 'icons')));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/product', productRoutes); // Alias for singular product endpoint
 app.use('/api/collections', collectionRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/customer', customerRoutes);
