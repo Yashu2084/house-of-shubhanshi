@@ -173,8 +173,7 @@ export default function HomePage() {
                   loading="lazy"
                   decoding="async"
                   className="story-arch-img"
-                  onClick={() => openLightbox('/assets/images/story/our-story.webp', 'Design Story')}
-                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="story-arch-badge">
@@ -229,8 +228,7 @@ export default function HomePage() {
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 450px"
                   loading="lazy"
                   decoding="async"
-                  onClick={() => openLightbox('/assets/images/future/future-01.webp', 'Celebration Silhouettes')}
-                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="future-card-content">
@@ -250,8 +248,7 @@ export default function HomePage() {
                   sizes="(max-width: 768px) 100vw, 400px"
                   loading="lazy"
                   decoding="async"
-                  onClick={() => openLightbox('/assets/images/future/future-02.webp', 'Rich Tones & Detailing')}
-                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="future-card-content">
@@ -278,8 +275,7 @@ export default function HomePage() {
                   sizes="(max-width: 768px) 100vw, 400px"
                   loading="lazy"
                   decoding="async"
-                  onClick={() => openLightbox('/assets/images/future/future-03.webp', 'The Design Process')}
-                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="future-card-content">
@@ -314,8 +310,7 @@ export default function HomePage() {
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 550px"
                   loading="lazy"
                   decoding="async"
-                  onClick={() => openLightbox('/assets/images/pieces/piece-01-beginning.webp', 'Thoughtful Design')}
-                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="piece-text">
@@ -341,8 +336,7 @@ export default function HomePage() {
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 550px"
                   loading="lazy"
                   decoding="async"
-                  onClick={() => openLightbox('/assets/images/pieces/piece-02-craft.webp', 'Refined Detailing')}
-                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="piece-text">
@@ -368,8 +362,7 @@ export default function HomePage() {
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 550px"
                   loading="lazy"
                   decoding="async"
-                  onClick={() => openLightbox('/assets/images/pieces/piece-03-dream.webp', 'Your Celebration')}
-                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <div className="piece-text">

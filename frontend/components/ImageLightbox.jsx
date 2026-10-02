@@ -1,45 +1,82 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const LightboxContext = createContext(null);
 
 export function LightboxProvider({ children }) {
   const [lightboxData, setLightboxData] = useState(null);
 
-  const openLightbox = (src, alt) => {
+  const openLightbox = useCallback((src, alt) => {
+    if (!src) return;
     setLightboxData({ src, alt });
-  };
+  }, []);
 
-  const closeLightbox = () => {
+  const closeLightbox = useCallback(() => {
     setLightboxData(null);
-  };
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+      document.body.style.removeProperty('overflow');
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.removeProperty('overflow');
+    }
+  }, []);
 
   useEffect(() => {
+    if (!lightboxData) {
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = '';
+        document.body.style.removeProperty('overflow');
+        document.documentElement.style.overflow = '';
+        document.documentElement.style.removeProperty('overflow');
+      }
+      return;
+    }
+
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevDocOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && lightboxData) {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
         closeLightbox();
       }
     };
-    if (lightboxData) {
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleKeyDown);
-    } else {
-      document.body.style.overflow = '';
-    }
+
+    window.addEventListener('keydown', handleKeyDown, true);
+
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown, true);
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = prevBodyOverflow || '';
+        document.body.style.removeProperty('overflow');
+        document.documentElement.style.overflow = prevDocOverflow || '';
+        document.documentElement.style.removeProperty('overflow');
+      }
     };
-  }, [lightboxData]);
+  }, [lightboxData, closeLightbox]);
 
   return (
     <LightboxContext.Provider value={{ openLightbox, closeLightbox }}>
       {children}
       {lightboxData && (
-        <div className="image-lightbox active" id="imageLightbox" role="dialog" aria-modal="true">
-          <div className="lightbox-backdrop" onClick={closeLightbox}></div>
-          <div className="lightbox-content">
+        <div
+          className="image-lightbox open active"
+          id="imageLightbox"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeLightbox();
+          }}
+        >
+          <div
+            className="lightbox-backdrop"
+            onClick={closeLightbox}
+            aria-hidden="true"
+          />
+          <div className="lightbox-dialog lightbox-content" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               className="lightbox-close-btn"
