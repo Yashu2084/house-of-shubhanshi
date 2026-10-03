@@ -49,9 +49,8 @@ export default function Footer() {
               <li><Link href="/" className="footer-link">HOME</Link></li>
               <li><Link href="/about" className="footer-link">ABOUT</Link></li>
               <li><Link href="/shop" className="footer-link">SHOP</Link></li>
-              <li><Link href="/cart" className="footer-link">SELECTION</Link></li>
+              <li><Link href="/cart" className="footer-link">CART</Link></li>
               <li><Link href="/policies" className="footer-link">POLICIES</Link></li>
-              <li><Link href="/profile" className="footer-link">MY PROFILE</Link></li>
             </ul>
           </div>
 
