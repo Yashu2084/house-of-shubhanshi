@@ -1,11 +1,9 @@
 // ==============================================================================
-// HOUSE OF SHUBHANSHI — CUSTOMER DASHBOARD ROUTES
+// HOUSE OF SHUBHANSHI — CUSTOMER PROFILE ROUTES
 // ==============================================================================
 const express = require('express');
 const router = express.Router();
-const analyticsService = require('../services/analytics.service');
-const orderService = require('../services/order.service');
-const rentalController = require('../controllers/rental.controller');
+const authService = require('../services/auth.service');
 const { requireAuth } = require('../middleware/auth');
 const { sendSuccess } = require('../utils/response');
 
@@ -13,41 +11,52 @@ const { sendSuccess } = require('../utils/response');
 router.use(requireAuth);
 
 /**
- * GET /api/customer/dashboard
- * Real PostgreSQL customer metrics (total spent, orders count, breakdown)
+ * GET /api/customer/profile
+ * Returns authenticated patron profile
  */
-router.get('/dashboard', async (req, res, next) => {
+router.get('/profile', async (req, res, next) => {
   try {
-    const analytics = await analyticsService.getCustomerAnalytics(req.user.id);
-    return sendSuccess(res, analytics);
+    const profile = await authService.getMe(req.user.id);
+    return sendSuccess(res, profile);
   } catch (err) {
     next(err);
   }
 });
 
 /**
- * GET /api/customer/orders
- * Patron's order history
+ * PUT /api/customer/profile or PATCH /api/customer/profile
+ * Update patron personal information
  */
-router.get('/orders', async (req, res, next) => {
+router.put('/profile', async (req, res, next) => {
   try {
-    const orders = await orderService.getCustomerOrders(req.user.id);
-    return sendSuccess(res, orders);
+    const updated = await authService.updateProfile(req.user.id, req.body);
+    return sendSuccess(res, { user: updated }, 'Profile updated successfully.');
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/profile', async (req, res, next) => {
+  try {
+    const updated = await authService.updateProfile(req.user.id, req.body);
+    return sendSuccess(res, { user: updated }, 'Profile updated successfully.');
   } catch (err) {
     next(err);
   }
 });
 
 /**
- * GET /api/customer/rentals
- * Patron's dress rental reservations
+ * POST /api/customer/change-password
+ * Update patron password securely
  */
-router.get('/rentals', rentalController.getCustomerRentals);
-
-/**
- * POST /api/customer/rentals/:id/return-request
- * Patron requests pickup/return for an active rental
- */
-router.post('/rentals/:id/return-request', rentalController.requestCustomerReturn);
+router.post('/change-password', async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    await authService.changePassword(req.user.id, currentPassword, newPassword);
+    return sendSuccess(res, { updated: true }, 'Password updated successfully.');
+  } catch (err) {
+    next(err);
+  }
+});
 
 module.exports = router;

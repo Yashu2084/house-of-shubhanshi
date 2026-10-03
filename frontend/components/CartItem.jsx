@@ -52,6 +52,12 @@ export default function CartItem({ item }) {
           {item.name}
         </h3>
 
+        {item.length && (
+          <div style={{ fontSize: '0.76rem', color: 'var(--text-brown)', marginBottom: '4px' }}>
+            Length: <strong>{item.length}</strong>{item.customLength ? ` (${item.customLength})` : ''}
+          </div>
+        )}
+
         {isRental ? (
           <>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-brown)', marginBottom: '6px', background: 'var(--ivory)', padding: '6px 10px', borderLeft: '2px solid var(--gold)' }}>

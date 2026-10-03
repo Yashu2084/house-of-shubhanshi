@@ -55,6 +55,9 @@ CREATE TABLE IF NOT EXISTS products (
     maximum_rental_days INTEGER DEFAULT 7,
     rental_deposit NUMERIC(12, 2) DEFAULT 0,
     rental_available_stock INTEGER DEFAULT 1,
+    views INTEGER NOT NULL DEFAULT 0,
+    lengths TEXT DEFAULT 'Standard (42"), Petite (39"), Tall (45"), Custom',
+    custom_length_available BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -121,6 +124,9 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS minimum_rental_days INTEGER DEFAUL
 ALTER TABLE products ADD COLUMN IF NOT EXISTS maximum_rental_days INTEGER DEFAULT 7;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS rental_deposit NUMERIC(12, 2) DEFAULT 0;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS rental_available_stock INTEGER DEFAULT 1;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS views INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS lengths TEXT DEFAULT 'Standard (42"), Petite (39"), Tall (45"), Custom';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS custom_length_available BOOLEAN NOT NULL DEFAULT TRUE;
 
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS rental_deposit_total NUMERIC(12, 2) DEFAULT 0;
 

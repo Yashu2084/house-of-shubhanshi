@@ -112,7 +112,9 @@ async function createProduct(data) {
       minimumRentalDays: data.minimumRentalDays !== undefined ? parseInt(data.minimumRentalDays, 10) : 1,
       maximumRentalDays: data.maximumRentalDays !== undefined ? parseInt(data.maximumRentalDays, 10) : 7,
       rentalDeposit: data.rentalDeposit !== undefined ? parseFloat(data.rentalDeposit) : 0,
-      rentalAvailableStock: data.rentalAvailableStock !== undefined ? parseInt(data.rentalAvailableStock, 10) : 1
+      rentalAvailableStock: data.rentalAvailableStock !== undefined ? parseInt(data.rentalAvailableStock, 10) : 1,
+      lengths: data.lengths || 'Standard (42"), Petite (39"), Tall (45"), Custom',
+      customLengthAvailable: data.customLengthAvailable !== undefined ? !!data.customLengthAvailable : true
     }
   });
 
@@ -148,6 +150,8 @@ async function updateProduct(id, data) {
   if (data.maximumRentalDays !== undefined) updateData.maximumRentalDays = parseInt(data.maximumRentalDays, 10);
   if (data.rentalDeposit !== undefined) updateData.rentalDeposit = parseFloat(data.rentalDeposit);
   if (data.rentalAvailableStock !== undefined) updateData.rentalAvailableStock = parseInt(data.rentalAvailableStock, 10);
+  if (data.lengths !== undefined) updateData.lengths = data.lengths;
+  if (data.customLengthAvailable !== undefined) updateData.customLengthAvailable = !!data.customLengthAvailable;
 
   return await db.product.update({
     where: { id },

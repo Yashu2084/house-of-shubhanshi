@@ -62,7 +62,7 @@ function SignupFormContent() {
       });
 
       showToast(`Welcome to House of Shubhanshi, ${user.name}.`);
-      router.push(redirectTarget || '/customer');
+      router.push(redirectTarget || '/profile');
     } catch (err) {
       console.error('Signup error:', err);
       setError(err.message || 'Registration failed. Please check your details and try again.');

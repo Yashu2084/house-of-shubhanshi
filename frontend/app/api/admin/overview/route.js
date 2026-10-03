@@ -9,59 +9,44 @@ export async function GET(req) {
     const { user, errorResponse } = await requireAdmin(req);
     if (errorResponse) return errorResponse;
 
-    const [orders, products, collections, users, rentals] = await Promise.all([
-      db.order.findMany(),
+    const [products, collections, users] = await Promise.all([
       db.product.findMany(),
       db.collection.findMany(),
-      db.user.findMany(),
-      db.rental.findMany()
+      db.user.findMany()
     ]);
 
-    const validOrders = orders.filter(o => o.status !== 'CANCELLED');
-    const totalSales = validOrders.reduce((acc, curr) => acc + (curr.totalAmount || 0), 0);
-    const totalOrders = orders.length;
     const customerUsers = users.filter(u => u.role === 'CUSTOMER');
     const totalCustomers = customerUsers.length;
     const totalProducts = products.length;
     const activeProducts = products.filter(p => p.isActive).length;
     const activeCollections = collections.filter(c => c.isActive).length;
 
-    const whatsappEnquiries = orders.filter(o => o.status === 'WHATSAPP_ENQUIRY' || o.paymentStatus === 'WHATSAPP_ENQUIRY').length;
-    const pendingOrders = orders.filter(o => ['WHATSAPP_ENQUIRY', 'RECEIVED', 'CONFIRMED', 'DISPATCHED', 'OUT_FOR_DELIVERY'].includes(o.status)).length;
+    // Top viewed products sorted by actual views
+    const topViewedProducts = [...products]
+      .sort((a, b) => (b.views || 0) - (a.views || 0))
+      .slice(0, 8);
 
-    const totalRentals = rentals.length;
-    const activeRentals = rentals.filter(r => r.status === 'ACTIVE' || r.status === 'RESERVED').length;
-    const pendingRentals = rentals.filter(r => ['RESERVED', 'ACTIVE', 'RETURN_PENDING'].includes(r.status)).length;
-    const heldDeposits = rentals.filter(r => r.depositStatus === 'HELD').reduce((s, r) => s + (r.securityDeposit || 0), 0);
-
-    const recentOrders = orders.slice(0, 10);
+    // Recently added products
+    const recentlyAdded = [...products]
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 5);
 
     return NextResponse.json({
       success: true,
       data: {
-        totalSales,
-        totalOrders,
-        totalCustomers,
         totalProducts,
         activeProducts,
+        totalCollections: collections.length,
         activeCollections,
-        pendingOrders,
-        pendingRentals,
-        whatsappEnquiries,
-        totalRentals,
-        recentOrders,
-        rentals: {
-          total: totalRentals,
-          active: activeRentals,
-          pending: pendingRentals,
-          heldDeposits
-        }
+        totalCustomers,
+        topViewedProducts,
+        recentlyAdded
       }
     });
   } catch (err) {
     console.error('[API /api/admin/overview GET Error]', err);
     return NextResponse.json(
-      { success: false, message: 'Failed to retrieve admin overview' },
+      { success: false, message: 'Failed to retrieve admin website overview' },
       { status: 500 }
     );
   }

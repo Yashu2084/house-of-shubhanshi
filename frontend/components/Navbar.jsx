@@ -69,11 +69,17 @@ export default function Navbar() {
           <div className="header-inner">
             {/* Desktop Left Navigation */}
             <nav className="nav-group nav-left" aria-label="Primary Left Navigation">
+              <Link href="/" className={`nav-link ${pathname === '/' ? 'active' : ''}`}>
+                HOME
+              </Link>
               <Link href="/about" className={`nav-link ${pathname === '/about' ? 'active' : ''}`}>
                 ABOUT
               </Link>
               <Link href="/shop" className={`nav-link ${pathname.startsWith('/shop') ? 'active' : ''}`}>
                 SHOP
+              </Link>
+              <Link href="/policies" className={`nav-link ${pathname === '/policies' ? 'active' : ''}`}>
+                POLICIES
               </Link>
             </nav>
 
@@ -93,6 +99,9 @@ export default function Navbar() {
 
             {/* Desktop Right Navigation */}
             <nav className="nav-group nav-right" aria-label="Primary Right Navigation">
+              <Link href="/#contact" className="nav-link">
+                CONTACT
+              </Link>
               {isAuthenticated ? (
                 <>
                   {isAdmin ? (
@@ -106,15 +115,15 @@ export default function Navbar() {
                     </Link>
                   ) : (
                     <Link
-                      href="/customer"
-                      className={`nav-link ${pathname.startsWith('/customer') ? 'active' : ''}`}
-                      title="My Account"
+                      href="/profile"
+                      className={`nav-link ${pathname === '/profile' ? 'active' : ''}`}
+                      title="My Profile"
                     >
-                      MY ACCOUNT
+                      PROFILE
                     </Link>
                   )}
-                  <Link href="/cart" className={`nav-link cart-link ${pathname === '/cart' ? 'active' : ''}`} aria-label="Shopping Bag">
-                    CART <span className="cart-count">{totalCount}</span>
+                  <Link href="/cart" className={`nav-link cart-link ${pathname === '/cart' ? 'active' : ''}`} aria-label="Curated Selection">
+                    SELECTION <span className="cart-count">{totalCount}</span>
                   </Link>
                   <button
                     type="button"
@@ -134,8 +143,8 @@ export default function Navbar() {
                   <Link href="/signup" className={`nav-link nav-btn-signup ${pathname === '/signup' ? 'active' : ''}`}>
                     SIGN UP
                   </Link>
-                  <Link href="/cart" className={`nav-link cart-link ${pathname === '/cart' ? 'active' : ''}`} aria-label="Shopping Bag">
-                    CART <span className="cart-count">{totalCount}</span>
+                  <Link href="/cart" className={`nav-link cart-link ${pathname === '/cart' ? 'active' : ''}`} aria-label="Curated Selection">
+                    SELECTION <span className="cart-count">{totalCount}</span>
                   </Link>
                 </>
               )}
@@ -169,8 +178,14 @@ export default function Navbar() {
           <Link href="/shop" className={`mobile-drawer-link ${pathname.startsWith('/shop') ? 'active' : ''}`} onClick={closeMobileMenu}>
             SHOP
           </Link>
+          <Link href="/policies" className={`mobile-drawer-link ${pathname === '/policies' ? 'active' : ''}`} onClick={closeMobileMenu}>
+            POLICIES
+          </Link>
+          <Link href="/#contact" className="mobile-drawer-link" onClick={closeMobileMenu}>
+            CONTACT
+          </Link>
           <Link href="/cart" className={`mobile-drawer-link ${pathname === '/cart' ? 'active' : ''}`} onClick={closeMobileMenu}>
-            CART (<span className="cart-count">{totalCount}</span>)
+            MY SELECTION (<span className="cart-count">{totalCount}</span>)
           </Link>
 
           {isAuthenticated ? (
@@ -186,20 +201,13 @@ export default function Navbar() {
                 </Link>
               ) : (
                 <Link
-                  href="/customer"
-                  className={`mobile-drawer-link ${pathname.startsWith('/customer') ? 'active' : ''}`}
+                  href="/profile"
+                  className={`mobile-drawer-link ${pathname === '/profile' ? 'active' : ''}`}
                   onClick={closeMobileMenu}
                 >
-                  MY ACCOUNT
+                  MY PROFILE
                 </Link>
               )}
-              <Link
-                href="/orders"
-                className={`mobile-drawer-link ${pathname.startsWith('/orders') ? 'active' : ''}`}
-                onClick={closeMobileMenu}
-              >
-                ORDERS &amp; TRACKING
-              </Link>
               <button
                 type="button"
                 className="mobile-drawer-link"

@@ -100,10 +100,21 @@ async function updateProfile(req, res, next) {
   }
 }
 
+async function changePassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    await authService.changePassword(req.user.id, currentPassword, newPassword);
+    return sendSuccess(res, { updated: true }, 'Password updated successfully.');
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   signup,
   login,
   logout,
   getMe,
-  updateProfile
+  updateProfile,
+  changePassword
 };

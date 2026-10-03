@@ -8,8 +8,32 @@ const { sendSuccess } = require('../utils/response');
 
 async function getDashboardOverview(req, res, next) {
   try {
-    const overview = await analyticsService.getAdminOverview();
-    return sendSuccess(res, overview);
+    const products = await db.product.findMany();
+    const collections = await db.collection.findMany();
+    const users = await db.user.findMany({ where: { role: 'CUSTOMER' } });
+
+    const activeProducts = products.filter(p => p.isActive).length;
+    const activeCollections = collections.filter(c => c.isActive).length;
+    const totalProducts = products.length;
+    const totalCustomers = users.length;
+
+    const topViewedProducts = [...products]
+      .sort((a, b) => (b.views || 0) - (a.views || 0))
+      .slice(0, 8);
+
+    const recentlyAdded = [...products]
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 5);
+
+    return sendSuccess(res, {
+      totalProducts,
+      activeProducts,
+      totalCollections: collections.length,
+      activeCollections,
+      totalCustomers,
+      topViewedProducts,
+      recentlyAdded
+    });
   } catch (err) {
     next(err);
   }
@@ -17,9 +41,8 @@ async function getDashboardOverview(req, res, next) {
 
 async function getSalesAnalytics(req, res, next) {
   try {
-    const range = req.query.range || '30d';
-    const analytics = await analyticsService.getSalesAnalytics(range);
-    return sendSuccess(res, analytics);
+    // Deprecated sales analytics placeholder
+    return sendSuccess(res, { message: 'Website activity is tracked via views and WhatsApp inquiries.' });
   } catch (err) {
     next(err);
   }
@@ -38,7 +61,7 @@ async function updateOrderStatus(req, res, next) {
   try {
     const { status } = req.body;
     const order = await orderService.updateOrderStatus(req.params.id, status);
-    return sendSuccess(res, order, `Order status successfully updated to ${status}`);
+    return sendSuccess(res, order, `Order status updated to ${status}`);
   } catch (err) {
     next(err);
   }
@@ -60,22 +83,14 @@ async function getAllCustomers(req, res, next) {
       where: { role: 'CUSTOMER' }
     });
 
-    const orders = await db.order.findMany();
-
-    // Enrich customers with order count and total spent
-    const customers = users.map(u => {
-      const customerOrders = orders.filter(o => o.userId === u.id && o.status !== 'CANCELLED');
-      const totalSpent = customerOrders.reduce((acc, curr) => acc + (curr.totalAmount || 0), 0);
-      return {
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        phone: u.phone,
-        totalSpent,
-        ordersCount: customerOrders.length,
-        createdAt: u.createdAt
-      };
-    });
+    const customers = users.map(u => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      dob: u.dob || null,
+      createdAt: u.createdAt
+    }));
 
     return sendSuccess(res, customers);
   } catch (err) {

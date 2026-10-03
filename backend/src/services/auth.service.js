@@ -133,11 +133,29 @@ async function getMe(userId) {
 /**
  * Update Customer Profile
  */
-async function updateProfile(userId, { name, phone, dob }) {
+async function updateProfile(userId, { name, phone, email, dob }) {
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    const error = new Error('User not found.');
+    error.statusCode = 404;
+    throw error;
+  }
+
   const updateData = {};
   if (name && typeof name === 'string') updateData.name = name.trim();
   if (phone !== undefined) updateData.phone = phone ? phone.trim() : null;
   if (dob !== undefined) updateData.dob = dob ? String(dob).trim() : null;
+
+  if (email && typeof email === 'string' && email.trim().toLowerCase() !== user.email.toLowerCase()) {
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = await db.user.findUnique({ where: { email: cleanEmail } });
+    if (existing && existing.id !== userId) {
+      const error = new Error('This email address is already registered to another account.');
+      error.statusCode = 409;
+      throw error;
+    }
+    updateData.email = cleanEmail;
+  }
 
   const updatedUser = await db.user.update({
     where: { id: userId },
@@ -148,10 +166,51 @@ async function updateProfile(userId, { name, phone, dob }) {
   return safeUser;
 }
 
+/**
+ * Change Customer Password
+ */
+async function changePassword(userId, currentPassword, newPassword) {
+  if (!currentPassword || !newPassword) {
+    const error = new Error('Both current and new password are required.');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (newPassword.length < 8) {
+    const error = new Error('New password must be at least 8 characters.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    const error = new Error('User not found.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const isMatch = await bcrypt.compare(currentPassword, user.passwordHash || user.password_hash || '');
+  if (!isMatch) {
+    const error = new Error('Current password is incorrect.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash(newPassword, salt);
+
+  await db.user.update({
+    where: { id: userId },
+    data: { passwordHash }
+  });
+
+  return { success: true };
+}
+
 module.exports = {
   signup,
   login,
   getMe,
   updateProfile,
+  changePassword,
   generateToken
 };

@@ -61,6 +61,9 @@ function mapProduct(row) {
     maximumRentalDays: row.maximum_rental_days ? parseInt(row.maximum_rental_days, 10) : 7,
     rentalDeposit: row.rental_deposit ? parseFloat(row.rental_deposit) : 0,
     rentalAvailableStock: row.rental_available_stock !== undefined && row.rental_available_stock !== null ? parseInt(row.rental_available_stock, 10) : 1,
+    views: parseInt(row.views || 0, 10),
+    lengths: row.lengths || 'Standard (42"), Petite (39"), Tall (45"), Custom',
+    customLengthAvailable: row.custom_length_available !== undefined ? !!row.custom_length_available : true,
     createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
     updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : null,
     collection: row.col_name ? {
@@ -475,8 +478,9 @@ const db = {
           category, fabric, color, size, material, featured, stock, is_active,
           collection_id, is_rentable, rental_base_price, rental_price_per_day,
           minimum_rental_days, maximum_rental_days, rental_deposit, rental_available_stock,
+          views, lengths, custom_length_available,
           created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, NOW(), NOW())
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, NOW(), NOW())
         RETURNING *`,
         [
           id,
@@ -502,7 +506,10 @@ const db = {
           data.minimumRentalDays !== undefined ? parseInt(data.minimumRentalDays, 10) : 1,
           data.maximumRentalDays !== undefined ? parseInt(data.maximumRentalDays, 10) : 7,
           data.rentalDeposit !== undefined ? parseFloat(data.rentalDeposit) : 0,
-          data.rentalAvailableStock !== undefined ? parseInt(data.rentalAvailableStock, 10) : 1
+          data.rentalAvailableStock !== undefined ? parseInt(data.rentalAvailableStock, 10) : 1,
+          data.views !== undefined ? parseInt(data.views, 10) : 0,
+          data.lengths || 'Standard (42"), Petite (39"), Tall (45"), Custom',
+          data.customLengthAvailable !== undefined ? !!data.customLengthAvailable : true
         ]
       );
       return mapProduct(res.rows[0]);
@@ -535,7 +542,10 @@ const db = {
         minimumRentalDays: 'minimum_rental_days',
         maximumRentalDays: 'maximum_rental_days',
         rentalDeposit: 'rental_deposit',
-        rentalAvailableStock: 'rental_available_stock'
+        rentalAvailableStock: 'rental_available_stock',
+        views: 'views',
+        lengths: 'lengths',
+        customLengthAvailable: 'custom_length_available'
       };
 
       for (const [key, col] of Object.entries(mapping)) {
@@ -553,6 +563,15 @@ const db = {
         params
       );
       if (res.rows.length === 0) throw new Error('Product not found');
+      return mapProduct(res.rows[0]);
+    },
+
+    incrementViews: async (id) => {
+      const res = await database.query(
+        `UPDATE products SET views = COALESCE(views, 0) + 1 WHERE id = $1 or slug = $1 RETURNING *`,
+        [id]
+      );
+      if (res.rows.length === 0) return null;
       return mapProduct(res.rows[0]);
     },
 

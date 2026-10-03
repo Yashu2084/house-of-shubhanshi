@@ -341,6 +341,18 @@ const db = {
       const pool = getPgPool();
       if (pool) {
         try {
+          if (data.name) {
+            await pool.query('UPDATE users SET name = $1, updated_at = NOW() WHERE id = $2', [data.name, where.id]);
+          }
+          if (data.phone !== undefined) {
+            await pool.query('UPDATE users SET phone = $1, updated_at = NOW() WHERE id = $2', [data.phone, where.id]);
+          }
+          if (data.email) {
+            await pool.query('UPDATE users SET email = $1, updated_at = NOW() WHERE id = $2', [data.email.toLowerCase().trim(), where.id]);
+          }
+          if (data.dob !== undefined) {
+            await pool.query('UPDATE users SET dob = $1, updated_at = NOW() WHERE id = $2', [data.dob, where.id]);
+          }
           if (data.passwordHash) {
             await pool.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [data.passwordHash, where.id]);
           }
@@ -414,7 +426,11 @@ const db = {
             minimumRentalDays: r.minimum_rental_days ? parseInt(r.minimum_rental_days, 10) : 1,
             maximumRentalDays: r.maximum_rental_days ? parseInt(r.maximum_rental_days, 10) : 14,
             rentalDeposit: r.rental_deposit ? parseFloat(r.rental_deposit) : 0,
-            rentalAvailableStock: r.rental_available_stock ? parseInt(r.rental_available_stock, 10) : 1
+            rentalAvailableStock: r.rental_available_stock ? parseInt(r.rental_available_stock, 10) : 1,
+            views: parseInt(r.views || 0, 10),
+            lengths: r.lengths || 'Standard (42"), Petite (39"), Tall (45"), Custom',
+            customLengthAvailable: r.custom_length_available !== undefined ? !!r.custom_length_available : true,
+            createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString()
           }));
         } catch (e) {
           console.warn('[DB Product findMany Error]', e.message);
@@ -466,6 +482,9 @@ const db = {
         maximumRentalDays: parseInt(data.maximumRentalDays, 10) || 14,
         rentalDeposit: parseFloat(data.rentalDeposit) || 0,
         rentalAvailableStock: parseInt(data.rentalAvailableStock, 10) || 1,
+        views: data.views !== undefined ? parseInt(data.views, 10) : 0,
+        lengths: data.lengths || 'Standard (42"), Petite (39"), Tall (45"), Custom',
+        customLengthAvailable: data.customLengthAvailable !== undefined ? !!data.customLengthAvailable : true,
         createdAt: new Date().toISOString()
       };
 
@@ -477,12 +496,14 @@ const db = {
               category, fabric, color, size, material, featured, stock, is_active,
               collection_id, is_rentable, rental_base_price, rental_price_per_day,
               minimum_rental_days, maximum_rental_days, rental_deposit, rental_available_stock,
+              views, lengths, custom_length_available,
               created_at, updated_at
             ) VALUES (
               $1, $2, $3, $4, $5, $6, $7, $8,
               $9, $10, $11, $12, $13, $14, $15, $16,
               $17, $18, $19, $20,
               $21, $22, $23, $24,
+              $25, $26, $27,
               NOW(), NOW()
             )`,
             [
@@ -490,7 +511,8 @@ const db = {
               newProd.image, newProd.images, newProd.category, newProd.fabric, newProd.color, newProd.size,
               newProd.material, newProd.featured, newProd.stock, newProd.isActive, newProd.collectionId,
               newProd.isRentable, newProd.rentalBasePrice, newProd.rentalPricePerDay, newProd.minimumRentalDays,
-              newProd.maximumRentalDays, newProd.rentalDeposit, newProd.rentalAvailableStock
+              newProd.maximumRentalDays, newProd.rentalDeposit, newProd.rentalAvailableStock,
+              newProd.views, newProd.lengths, newProd.customLengthAvailable
             ]
           );
         } catch (pgErr) {
@@ -532,6 +554,9 @@ const db = {
           if (data.maximumRentalDays !== undefined) { fields.push(`maximum_rental_days = $${paramIdx++}`); params.push(parseInt(data.maximumRentalDays, 10)); }
           if (data.rentalDeposit !== undefined) { fields.push(`rental_deposit = $${paramIdx++}`); params.push(parseFloat(data.rentalDeposit)); }
           if (data.rentalAvailableStock !== undefined) { fields.push(`rental_available_stock = $${paramIdx++}`); params.push(parseInt(data.rentalAvailableStock, 10)); }
+          if (data.views !== undefined) { fields.push(`views = $${paramIdx++}`); params.push(parseInt(data.views, 10)); }
+          if (data.lengths !== undefined) { fields.push(`lengths = $${paramIdx++}`); params.push(data.lengths); }
+          if (data.customLengthAvailable !== undefined) { fields.push(`custom_length_available = $${paramIdx++}`); params.push(!!data.customLengthAvailable); }
 
           if (fields.length > 0) {
             fields.push(`updated_at = NOW()`);
@@ -549,6 +574,25 @@ const db = {
         store.products[idx] = { ...store.products[idx], ...data, updatedAt: new Date().toISOString() };
         saveMemStore();
         return store.products[idx];
+      }
+      return null;
+    },
+
+    async incrementViews(id) {
+      const pool = getPgPool();
+      if (pool) {
+        try {
+          await pool.query('UPDATE products SET views = COALESCE(views, 0) + 1 WHERE id = $1 OR slug = $1', [id]);
+        } catch (e) {
+          console.warn('[DB incrementViews Error]', e.message);
+        }
+      }
+      const store = loadMemStore();
+      const prod = store.products.find(p => p.id === id || p.slug === id);
+      if (prod) {
+        prod.views = (prod.views || 0) + 1;
+        saveMemStore();
+        return prod;
       }
       return null;
     },

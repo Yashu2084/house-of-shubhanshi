@@ -366,6 +366,11 @@ async function migrateRentals(executor) {
       WHERE maximum_rental_days IS NULL OR maximum_rental_days < 30
     `);
 
+    // Ensure views, lengths and custom_length_available exist on products
+    await q(`ALTER TABLE products ADD COLUMN IF NOT EXISTS views INTEGER NOT NULL DEFAULT 0`);
+    await q(`ALTER TABLE products ADD COLUMN IF NOT EXISTS lengths TEXT DEFAULT 'Standard (42"), Petite (39"), Tall (45"), Custom'`);
+    await q(`ALTER TABLE products ADD COLUMN IF NOT EXISTS custom_length_available BOOLEAN NOT NULL DEFAULT TRUE`);
+
     // 2. Check if rentals table has rows; if empty, seed sample rentals for patron Yash Vardhan
     const countRes = await q('SELECT COUNT(*) as count FROM rentals');
     const rentalCount = parseInt(countRes.rows[0].count, 10);

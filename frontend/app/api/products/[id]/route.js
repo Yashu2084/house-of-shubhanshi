@@ -17,6 +17,13 @@ export async function GET(req, { params }) {
       );
     }
 
+    try {
+      await db.product.incrementViews(product.id);
+      product.views = (product.views || 0) + 1;
+    } catch (vErr) {
+      // non-blocking
+    }
+
     return NextResponse.json({
       success: true,
       data: product

@@ -63,7 +63,9 @@ export async function getAuthUser(req) {
     name: user.name,
     email: user.email,
     phone: user.phone,
-    role: user.role
+    role: user.role,
+    dob: user.dob || null,
+    createdAt: user.createdAt || user.created_at || null
   };
 }
 

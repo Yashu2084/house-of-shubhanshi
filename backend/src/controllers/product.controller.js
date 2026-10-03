@@ -25,6 +25,14 @@ async function getOne(req, res, next) {
     if (!product) {
       product = await productService.getProductBySlug(id);
     }
+    if (product) {
+      try {
+        await db.product.incrementViews(product.id);
+        product.views = (product.views || 0) + 1;
+      } catch (vErr) {
+        // non-blocking
+      }
+    }
     return sendSuccess(res, product);
   } catch (err) {
     next(err);

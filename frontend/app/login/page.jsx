@@ -33,7 +33,7 @@ function LoginFormContent() {
       if (loggedUser && loggedUser.role === 'ADMIN') {
         router.push(redirectTarget || '/admin');
       } else {
-        router.push(redirectTarget || '/customer');
+        router.push(redirectTarget || '/profile');
       }
     } catch (err) {
       console.error('Login error:', err);

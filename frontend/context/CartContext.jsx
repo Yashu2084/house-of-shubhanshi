@@ -50,14 +50,18 @@ export function CartProvider({ children }) {
     setTimeout(() => setModalItem(null), 300);
   }, []);
 
-  const addItem = useCallback((product, quantity = 1, rentalOptions = null) => {
+  const addItem = useCallback((product, quantity = 1, rentalOptions = null, selectedOptions = {}) => {
     let updated;
+    const selectedLength = selectedOptions?.length || 'Standard (42")';
+    const customLength = selectedOptions?.customLength || '';
+    const size = selectedOptions?.size || product?.size || '';
+
     if (rentalOptions) {
-      const cartItemId = `${product.id}_rent_${rentalOptions.rentalStartDate}_${rentalOptions.rentalDays}`;
+      const cartItemId = `${product.id}_rent_${rentalOptions.rentalStartDate}_${rentalOptions.rentalDays}_${selectedLength}_${customLength}`;
       const existing = items.find(i => i.cartItemId === cartItemId);
 
       if (existing) {
-        showToast(`"${product.name}" rental is already in your curated bag.`);
+        showToast(`"${product.name}" rental is already in your selection.`);
         return;
       }
 
@@ -74,6 +78,9 @@ export function CartProvider({ children }) {
         rentalDays: rentalOptions.rentalDays,
         rentalStartDate: rentalOptions.rentalStartDate,
         rentalEndDate: rentalOptions.rentalEndDate,
+        length: selectedLength,
+        customLength: customLength,
+        size: size,
         quantity: 1
       };
 
@@ -88,13 +95,13 @@ export function CartProvider({ children }) {
         rentalDays: rentalOptions.rentalDays,
         rentalPrice: rentalOptions.rentalPrice,
         securityDeposit: rentalOptions.securityDeposit,
-        price: rentalOptions.totalRentalCost
+        price: rentalOptions.totalRentalCost,
+        length: selectedLength,
+        customLength: customLength
       });
     } else {
-      const cartItemId = `${product.id}_buy`;
-      const existingIndex = items.findIndex(
-        i => i.cartItemId === cartItemId || (i.productId === product.id && i.purchaseType !== 'RENT')
-      );
+      const cartItemId = `${product.id}_buy_${selectedLength}_${customLength}`;
+      const existingIndex = items.findIndex(i => i.cartItemId === cartItemId);
 
       if (existingIndex > -1) {
         updated = [...items];
@@ -108,6 +115,9 @@ export function CartProvider({ children }) {
           image: product.image,
           category: product.category,
           purchaseType: 'BUY',
+          length: selectedLength,
+          customLength: customLength,
+          size: size,
           quantity
         };
         updated = [...items, newItem];
@@ -120,7 +130,9 @@ export function CartProvider({ children }) {
         image: product.image,
         category: product.category,
         isRental: false,
-        price: product.price
+        price: product.price,
+        length: selectedLength,
+        customLength: customLength
       });
     }
   }, [items, persistItems, openModal, showToast]);
