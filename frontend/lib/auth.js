@@ -3,9 +3,9 @@
 // ==============================================================================
 import jwt from 'jsonwebtoken';
 import { NextResponse } from 'next/server';
+import { cookies, headers } from 'next/headers';
 const db = require('./db');
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.AUTH_SECRET || 'house_of_shubhanshi_super_secret_jwt_key_2026_dev';
 const COOKIE_NAME = 'auth_token';
 const MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 
@@ -16,6 +16,8 @@ const CANDIDATE_SECRETS = [
   'house_of_shubhanshi_default_secure_secret_2026',
   'house_of_shubhanshi_super_secret_jwt_key_2026_dev'
 ].filter(Boolean);
+
+const JWT_SECRET = process.env.JWT_SECRET || process.env.AUTH_SECRET || 'house_of_shubhanshi_super_secret_jwt_key_2026_dev';
 
 export function signToken(user) {
   return jwt.sign(
@@ -46,14 +48,15 @@ export function verifyToken(token) {
 export async function getAuthUser(req) {
   let token = null;
 
-  // 1. Next.js App Router cookies() from 'next/headers'
+  // 1. Next.js App Router cookies()
   try {
-    const { cookies, headers } = await import('next/headers');
-    if (typeof cookies === 'function') {
-      const cookieStore = cookies();
-      token = cookieStore.get(COOKIE_NAME)?.value || cookieStore.get('token')?.value;
-    }
-    if (!token && typeof headers === 'function') {
+    const cookieStore = cookies();
+    token = cookieStore.get(COOKIE_NAME)?.value || cookieStore.get('token')?.value;
+  } catch (e) {}
+
+  // 2. Next.js App Router headers()
+  if (!token) {
+    try {
       const headersList = headers();
       const authHeader = headersList.get('authorization') || '';
       if (authHeader.toLowerCase().startsWith('bearer ')) {
@@ -64,9 +67,7 @@ export async function getAuthUser(req) {
         const match = rawCookie.match(/(?:^|;\s*)(?:auth_token|token)=([^;]+)/);
         if (match) token = decodeURIComponent(match[1].trim());
       }
-    }
-  } catch (e) {
-    // next/headers not available
+    } catch (e) {}
   }
 
   // 2. Next.js Request cookies object
