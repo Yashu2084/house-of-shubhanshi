@@ -202,16 +202,34 @@ function saveMemStore() {
 
 // ------------------------------------------------------------------------------
 // POSTGRESQL POOL INITIALIZATION (Global reuse for Serverless / Next.js)
-// ------------------------------------------------------------------------------
-function getDbUrl() {
+function isPlaceholderUrl(url) {
+  if (!url) return true;
   return (
-    process.env.DATABASE_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.POSTGRES_PRISMA_URL ||
-    process.env.POSTGRES_URL_NON_POOLING ||
-    process.env.SUPABASE_DATABASE_URL ||
-    ''
-  ).trim();
+    url.includes('@HOST:') ||
+    url.includes('HOST:5432') ||
+    url.includes('USER:PASSWORD') ||
+    url.includes('your_') ||
+    url.includes('example.com')
+  );
+}
+
+function getDbUrl() {
+  const candidates = [
+    process.env.POSTGRES_URL,
+    process.env.POSTGRES_PRISMA_URL,
+    process.env.POSTGRES_URL_NON_POOLING,
+    process.env.DATABASE_URL,
+    process.env.SUPABASE_DATABASE_URL
+  ].filter(Boolean);
+
+  for (const url of candidates) {
+    const trimmed = url.trim();
+    if (trimmed && !isPlaceholderUrl(trimmed)) {
+      return trimmed;
+    }
+  }
+
+  return '';
 }
 
 function getPgPool() {
@@ -397,6 +415,14 @@ async function ensureTables() {
 // ------------------------------------------------------------------------------
 const db = {
   async testConnection() {
+    const rawUrl = (process.env.DATABASE_URL || process.env.POSTGRES_URL || '').trim();
+    if (rawUrl && isPlaceholderUrl(rawUrl)) {
+      return {
+        ok: false,
+        error: 'Database URL is an unconfigured template placeholder (USER:PASSWORD@HOST). Please provide real PostgreSQL credentials in environment variables.',
+        type: 'placeholder'
+      };
+    }
     const pool = getPgPool();
     if (pool) {
       try {
