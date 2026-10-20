@@ -46,36 +46,50 @@ export function verifyToken(token) {
 export async function getAuthUser(req) {
   let token = null;
 
-  // 1. Next.js Request cookies object
+  // 1. Next.js App Router cookies() from 'next/headers'
   try {
-    if (req?.cookies) {
+    const { cookies, headers } = await import('next/headers');
+    if (typeof cookies === 'function') {
+      const cookieStore = cookies();
+      token = cookieStore.get(COOKIE_NAME)?.value || cookieStore.get('token')?.value;
+    }
+    if (!token && typeof headers === 'function') {
+      const headersList = headers();
+      const authHeader = headersList.get('authorization') || '';
+      if (authHeader.toLowerCase().startsWith('bearer ')) {
+        token = authHeader.slice(7).trim();
+      }
+      if (!token) {
+        const rawCookie = headersList.get('cookie') || '';
+        const match = rawCookie.match(/(?:^|;\s*)(?:auth_token|token)=([^;]+)/);
+        if (match) token = decodeURIComponent(match[1].trim());
+      }
+    }
+  } catch (e) {
+    // next/headers not available
+  }
+
+  // 2. Next.js Request cookies object
+  if (!token && req?.cookies) {
+    try {
       if (typeof req.cookies.get === 'function') {
         token = req.cookies.get(COOKIE_NAME)?.value || req.cookies.get('token')?.value;
       } else if (typeof req.cookies === 'object') {
         token = req.cookies[COOKIE_NAME] || req.cookies.token;
       }
-    }
-  } catch (e) {}
-
-  // 2. Fallback: Parse Cookie header safely
-  if (!token && req?.headers) {
-    try {
-      const cookieHeader = (typeof req.headers.get === 'function' ? req.headers.get('cookie') : req.headers.cookie) || '';
-      const parts = cookieHeader.split(';');
-      for (const part of parts) {
-        const idx = part.indexOf('=');
-        if (idx > -1) {
-          const key = part.slice(0, idx).trim();
-          if (key === COOKIE_NAME || key === 'token') {
-            token = decodeURIComponent(part.slice(idx + 1).trim());
-            break;
-          }
-        }
-      }
     } catch (e) {}
   }
 
-  // 3. Fallback: Authorization Header Bearer token
+  // 3. Fallback: Parse Cookie header from req
+  if (!token && req?.headers) {
+    try {
+      const cookieHeader = (typeof req.headers.get === 'function' ? req.headers.get('cookie') : req.headers.cookie) || '';
+      const match = cookieHeader.match(/(?:^|;\s*)(?:auth_token|token)=([^;]+)/);
+      if (match) token = decodeURIComponent(match[1].trim());
+    } catch (e) {}
+  }
+
+  // 4. Fallback: Authorization Header Bearer token from req
   if (!token && req?.headers) {
     try {
       const authHeader = (typeof req.headers.get === 'function' ? req.headers.get('authorization') : req.headers.authorization) || '';
