@@ -105,40 +105,16 @@ export async function getAuthUser(req) {
   const payload = verifyToken(token);
   if (!payload || !payload.id) return null;
 
-  let user = null;
-  try {
-    user = await db.user.findUnique({ where: { id: payload.id } });
-  } catch (e) {
-    console.warn('[getAuthUser DB lookup notice]', e.message);
-  }
-
-  if (user) {
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      dob: user.dob || null,
-      createdAt: user.createdAt || user.created_at || null
-    };
-  }
-
-  // Resilient fallback: If the database is temporarily unreachable, rely on the
-  // cryptographically signed JWT payload so authenticated admins/users are not falsely rejected
-  if (payload.role) {
-    return {
-      id: payload.id,
-      name: payload.name || 'User',
-      email: payload.email,
-      phone: payload.phone || '',
-      role: payload.role,
-      dob: null,
-      createdAt: null
-    };
-  }
-
-  return null;
+  // Immediate zero-latency return from cryptographically verified JWT session
+  return {
+    id: payload.id,
+    name: payload.name || 'User',
+    email: payload.email,
+    phone: payload.phone || '',
+    role: payload.role || 'CUSTOMER',
+    dob: null,
+    createdAt: null
+  };
 }
 
 export async function requireAuth(req) {

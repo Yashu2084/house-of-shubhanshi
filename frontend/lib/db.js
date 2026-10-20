@@ -263,9 +263,11 @@ function getPgPool() {
     const pool = new Pool({
       connectionString: dbUrl,
       ssl,
-      connectionTimeoutMillis: 10000,
-      idleTimeoutMillis: 30000,
-      max: 10
+      connectionTimeoutMillis: 3000,
+      statement_timeout: 4000,
+      query_timeout: 4000,
+      idleTimeoutMillis: 10000,
+      max: 5
     });
 
     pool.on('error', (err) => {
