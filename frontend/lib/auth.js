@@ -48,13 +48,50 @@ export function verifyToken(token) {
 export async function getAuthUser(req) {
   let token = null;
 
-  // 1. Next.js App Router cookies()
-  try {
-    const cookieStore = cookies();
-    token = cookieStore.get(COOKIE_NAME)?.value || cookieStore.get('token')?.value;
-  } catch (e) {}
+  // 1. Direct Request: Authorization Header Bearer token
+  if (req?.headers) {
+    try {
+      const authHeader = (typeof req.headers.get === 'function' ? req.headers.get('authorization') : req.headers.authorization) || '';
+      if (authHeader.toLowerCase().startsWith('bearer ')) {
+        token = authHeader.slice(7).trim();
+      }
+    } catch (e) {}
+  }
 
-  // 2. Next.js App Router headers()
+  // 2. Direct Request: Cookie header or req.cookies object
+  if (!token && req) {
+    try {
+      if (req.cookies) {
+        if (typeof req.cookies.get === 'function') {
+          token = req.cookies.get(COOKIE_NAME)?.value || req.cookies.get('token')?.value;
+        } else if (typeof req.cookies === 'object') {
+          token = req.cookies[COOKIE_NAME] || req.cookies.token;
+        }
+      }
+      if (!token && req.headers) {
+        const cookieHeader = (typeof req.headers.get === 'function' ? req.headers.get('cookie') : req.headers.cookie) || '';
+        const match = cookieHeader.match(/(?:^|;\s*)(?:auth_token|token)=([^;]+)/);
+        if (match) token = decodeURIComponent(match[1].trim());
+      }
+    } catch (e) {}
+  }
+
+  // 3. Direct Request: Custom x-admin-token or query param
+  if (!token && req?.headers) {
+    try {
+      const custom = typeof req.headers.get === 'function' ? req.headers.get('x-admin-token') : req.headers['x-admin-token'];
+      if (custom) token = custom.trim();
+    } catch (e) {}
+  }
+
+  // 4. Next.js App Router context fallback (cookies() & headers())
+  if (!token) {
+    try {
+      const cookieStore = cookies();
+      token = cookieStore.get(COOKIE_NAME)?.value || cookieStore.get('token')?.value;
+    } catch (e) {}
+  }
+
   if (!token) {
     try {
       const headersList = headers();
@@ -70,37 +107,10 @@ export async function getAuthUser(req) {
     } catch (e) {}
   }
 
-  // 2. Next.js Request cookies object
-  if (!token && req?.cookies) {
-    try {
-      if (typeof req.cookies.get === 'function') {
-        token = req.cookies.get(COOKIE_NAME)?.value || req.cookies.get('token')?.value;
-      } else if (typeof req.cookies === 'object') {
-        token = req.cookies[COOKIE_NAME] || req.cookies.token;
-      }
-    } catch (e) {}
-  }
-
-  // 3. Fallback: Parse Cookie header from req
-  if (!token && req?.headers) {
-    try {
-      const cookieHeader = (typeof req.headers.get === 'function' ? req.headers.get('cookie') : req.headers.cookie) || '';
-      const match = cookieHeader.match(/(?:^|;\s*)(?:auth_token|token)=([^;]+)/);
-      if (match) token = decodeURIComponent(match[1].trim());
-    } catch (e) {}
-  }
-
-  // 4. Fallback: Authorization Header Bearer token from req
-  if (!token && req?.headers) {
-    try {
-      const authHeader = (typeof req.headers.get === 'function' ? req.headers.get('authorization') : req.headers.authorization) || '';
-      if (authHeader.toLowerCase().startsWith('bearer ')) {
-        token = authHeader.slice(7).trim();
-      }
-    } catch (e) {}
-  }
-
   if (!token) return null;
+
+  // Clean any quotes or trailing attributes
+  token = token.replace(/^["']|["']$/g, '').split(';')[0].trim();
 
   const payload = verifyToken(token);
   if (!payload || !payload.id) return null;
