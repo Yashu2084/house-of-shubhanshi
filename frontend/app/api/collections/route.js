@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '../../../lib/auth';
 const db = require('../../../lib/db');
 
@@ -20,7 +21,7 @@ export async function GET(req) {
   } catch (err) {
     console.error('[API /api/collections GET Error]', err);
     return NextResponse.json(
-      { success: false, message: 'Failed to retrieve collections' },
+      { success: false, message: 'Failed to retrieve collections: ' + err.message },
       { status: 500 }
     );
   }
@@ -32,7 +33,7 @@ export async function POST(req) {
     if (errorResponse) return errorResponse;
 
     const body = await req.json();
-    if (!body.name) {
+    if (!body.name || !body.name.trim()) {
       return NextResponse.json(
         { success: false, message: 'Collection name is required' },
         { status: 400 }
@@ -40,6 +41,15 @@ export async function POST(req) {
     }
 
     const created = await db.collection.create({ data: body });
+
+    try {
+      revalidatePath('/collections');
+      revalidatePath('/shop');
+      revalidatePath('/');
+    } catch (e) {
+      // non-blocking
+    }
+
     return NextResponse.json(
       {
         success: true,
@@ -51,7 +61,7 @@ export async function POST(req) {
   } catch (err) {
     console.error('[API /api/collections POST Error]', err);
     return NextResponse.json(
-      { success: false, message: 'Failed to create collection' },
+      { success: false, message: err.message || 'Failed to create collection' },
       { status: 500 }
     );
   }

@@ -3,13 +3,12 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '../../../../lib/auth';
-import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
 
 /**
  * POST /api/admin/upload
- * Secured administrator upload handler with sharp WebP optimization
+ * Secured administrator upload handler with resilient image optimization
  * Compatible with Vercel Serverless (Node.js runtime) and local development.
  */
 export async function POST(req) {
@@ -28,38 +27,56 @@ export async function POST(req) {
       );
     }
 
-    // Extract raw buffer from base64 payload
-    const matches = imagePayload.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    // Extract raw buffer and mime type from base64 payload
+    let mimeType = 'image/jpeg';
     let buffer;
+    const matches = typeof imagePayload === 'string' ? imagePayload.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/) : null;
     if (matches && matches.length === 3) {
+      mimeType = matches[1];
       buffer = Buffer.from(matches[2], 'base64');
-    } else {
+    } else if (typeof imagePayload === 'string') {
       buffer = Buffer.from(imagePayload, 'base64');
+    } else {
+      buffer = Buffer.from(imagePayload);
     }
 
     const safeName = (filename || 'product')
       .replace(/\.[^/.]+$/, '')
       .replace(/[^a-zA-Z0-9_-]/g, '_')
       .toLowerCase();
-    const finalFilename = `${safeName}-${Date.now()}.webp`;
 
-    // Process & optimize image with sharp:
-    // Resize to luxury e-commerce proportions (max 1200x1600 inside), convert to high-fidelity WebP
-    const outBuffer = await sharp(buffer)
-      .resize({ width: 1200, height: 1600, fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 82, effort: 4 })
-      .toBuffer();
+    let outBuffer = buffer;
+    let outMime = mimeType;
+    let extension = 'webp';
 
-    const dataUri = `data:image/webp;base64,${outBuffer.toString('base64')}`;
+    // Attempt sharp optimization dynamically if available
+    try {
+      const sharpModule = await import('sharp');
+      const sharp = sharpModule.default || sharpModule;
+      outBuffer = await sharp(buffer)
+        .resize({ width: 1200, height: 1600, fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 82, effort: 4 })
+        .toBuffer();
+      outMime = 'image/webp';
+      extension = 'webp';
+    } catch (sharpErr) {
+      console.warn('[Upload] Sharp processing bypassed (using direct buffer):', sharpErr.message);
+      if (mimeType.includes('png')) extension = 'png';
+      else if (mimeType.includes('webp')) extension = 'webp';
+      else extension = 'jpg';
+    }
+
+    const finalFilename = `${safeName}-${Date.now()}.${extension}`;
+    const dataUri = `data:${outMime};base64,${outBuffer.toString('base64')}`;
     let finalUrl = dataUri;
 
-    // 1. Persistent Storage Option A: Vercel Blob Storage (if BLOB_READ_WRITE_TOKEN is configured)
+    // 1. Persistent Storage Option A: Vercel Blob Storage
     if (process.env.BLOB_READ_WRITE_TOKEN) {
       try {
         const { put } = await import('@vercel/blob');
         const blob = await put(`products/${finalFilename}`, outBuffer, {
           access: 'public',
-          contentType: 'image/webp'
+          contentType: outMime
         });
         if (blob && blob.url) {
           finalUrl = blob.url;
@@ -77,7 +94,6 @@ export async function POST(req) {
           fs.mkdirSync(publicPath, { recursive: true });
         }
         fs.writeFileSync(path.join(publicPath, finalFilename), outBuffer);
-        // In local development with filesystem access, use relative URL if not using Blob
         if (!process.env.BLOB_READ_WRITE_TOKEN) {
           finalUrl = `/images/products/${finalFilename}`;
         }

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '../../../../lib/auth';
 const db = require('../../../../lib/db');
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req, { params }) {
   try {
@@ -31,13 +34,13 @@ export async function GET(req, { params }) {
   } catch (err) {
     console.error('[API /api/products/[id] GET Error]', err);
     return NextResponse.json(
-      { success: false, message: 'Failed to retrieve product' },
+      { success: false, message: 'Failed to retrieve product: ' + err.message },
       { status: 500 }
     );
   }
 }
 
-export async function PUT(req, { params }) {
+async function handleUpdate(req, { params }) {
   try {
     const { user, errorResponse } = await requireAdmin(req);
     if (errorResponse) return errorResponse;
@@ -52,9 +55,19 @@ export async function PUT(req, { params }) {
 
     if (!updated) {
       return NextResponse.json(
-        { success: false, message: 'Product not found' },
+        { success: false, message: 'Product not found or update returned no record' },
         { status: 404 }
       );
+    }
+
+    try {
+      revalidatePath('/shop');
+      if (updated.slug) revalidatePath(`/shop/${updated.slug}`);
+      revalidatePath(`/shop/${id}`);
+      revalidatePath('/collections');
+      revalidatePath('/');
+    } catch (e) {
+      // non-blocking
     }
 
     return NextResponse.json({
@@ -63,13 +76,16 @@ export async function PUT(req, { params }) {
       data: updated
     });
   } catch (err) {
-    console.error('[API /api/products/[id] PUT Error]', err);
+    console.error('[API /api/products/[id] PUT/PATCH Error]', err);
     return NextResponse.json(
-      { success: false, message: 'Failed to update product' },
+      { success: false, message: err.message || 'Failed to update product' },
       { status: 500 }
     );
   }
 }
+
+export const PUT = handleUpdate;
+export const PATCH = handleUpdate;
 
 export async function DELETE(req, { params }) {
   try {
@@ -77,24 +93,40 @@ export async function DELETE(req, { params }) {
     if (errorResponse) return errorResponse;
 
     const id = params?.id;
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: 'Product ID is required for deletion' },
+        { status: 400 }
+      );
+    }
+
     const removed = await db.product.delete({ where: { id } });
 
     if (!removed) {
       return NextResponse.json(
-        { success: false, message: 'Product not found' },
+        { success: false, message: 'Product not found or already deleted' },
         { status: 404 }
       );
     }
 
+    try {
+      revalidatePath('/shop');
+      if (removed.slug) revalidatePath(`/shop/${removed.slug}`);
+      revalidatePath('/collections');
+      revalidatePath('/');
+    } catch (e) {
+      // non-blocking
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Product deleted successfully',
+      message: 'Product permanently removed from active catalog',
       data: removed
     });
   } catch (err) {
     console.error('[API /api/products/[id] DELETE Error]', err);
     return NextResponse.json(
-      { success: false, message: 'Failed to delete product' },
+      { success: false, message: err.message || 'Failed to delete product' },
       { status: 500 }
     );
   }

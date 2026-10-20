@@ -32,9 +32,16 @@ export default function AdminDashboardPage() {
   // Modals
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [savingProduct, setSavingProduct] = useState(false);
+  const [productModalError, setProductModalError] = useState('');
+
   const [collectionModalOpen, setCollectionModalOpen] = useState(false);
   const [editingCollection, setEditingCollection] = useState(null);
+  const [savingCollection, setSavingCollection] = useState(false);
+  const [collectionModalError, setCollectionModalError] = useState('');
+
   const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'product' | 'collection', id, name }
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Image Upload states
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -206,6 +213,7 @@ export default function AdminDashboardPage() {
 
   // Open Product Modal (New or Edit)
   const openProductModal = (product = null) => {
+    setProductModalError('');
     if (product) {
       setEditingProduct(product);
       setProdForm({
@@ -237,8 +245,14 @@ export default function AdminDashboardPage() {
   // Save Product (Create or Update)
   const handleSaveProduct = async (e) => {
     e.preventDefault();
+    setProductModalError('');
+
     if (!prodForm.name.trim()) {
-      alert('Product name is required');
+      setProductModalError('Product name is required.');
+      return;
+    }
+    if (isNaN(parseFloat(prodForm.price)) || parseFloat(prodForm.price) < 0) {
+      setProductModalError('Please enter a valid purchase price.');
       return;
     }
 
@@ -260,6 +274,7 @@ export default function AdminDashboardPage() {
     };
 
     try {
+      setSavingProduct(true);
       if (editingProduct) {
         await api.put(`/products/${editingProduct.id}`, payload);
         showToast(`"${payload.name}" updated successfully.`);
@@ -268,9 +283,14 @@ export default function AdminDashboardPage() {
         showToast(`"${payload.name}" created successfully.`);
       }
       setProductModalOpen(false);
-      loadAdminData();
+      setEditingProduct(null);
+      setProdForm(initialProductForm);
+      await loadAdminData();
     } catch (err) {
-      alert(err.message || 'Failed to save product');
+      console.error('Save product error:', err);
+      setProductModalError(err.message || 'Failed to save product. Please try again.');
+    } finally {
+      setSavingProduct(false);
     }
   };
 
@@ -279,7 +299,7 @@ export default function AdminDashboardPage() {
     try {
       await api.put(`/products/${prod.id}`, { isActive: !prod.isActive });
       showToast(`"${prod.name}" status updated to ${!prod.isActive ? 'Active' : 'Discontinued'}.`);
-      loadAdminData();
+      await loadAdminData();
     } catch (err) {
       alert('Failed to update product availability');
     }
@@ -290,7 +310,7 @@ export default function AdminDashboardPage() {
     try {
       await api.put(`/products/${prod.id}`, { featured: !prod.featured });
       showToast(`"${prod.name}" featured status updated.`);
-      loadAdminData();
+      await loadAdminData();
     } catch (err) {
       alert('Failed to update featured status');
     }
@@ -300,6 +320,7 @@ export default function AdminDashboardPage() {
   const handleConfirmDelete = async () => {
     if (!deleteConfirm) return;
     try {
+      setIsDeleting(true);
       if (deleteConfirm.type === 'product') {
         await api.delete(`/products/${deleteConfirm.id}`);
         showToast(`"${deleteConfirm.name}" removed from catalog.`);
@@ -308,14 +329,18 @@ export default function AdminDashboardPage() {
         showToast(`Collection "${deleteConfirm.name}" deleted.`);
       }
       setDeleteConfirm(null);
-      loadAdminData();
+      await loadAdminData();
     } catch (err) {
-      alert(err.message || 'Failed to delete item');
+      console.error('Delete item error:', err);
+      alert(err.message || 'Failed to delete item.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   // Open Collection Modal
   const openCollectionModal = (collection = null) => {
+    setCollectionModalError('');
     if (collection) {
       setEditingCollection(collection);
       setColForm({
@@ -335,8 +360,10 @@ export default function AdminDashboardPage() {
   // Save Collection
   const handleSaveCollection = async (e) => {
     e.preventDefault();
+    setCollectionModalError('');
+
     if (!colForm.name.trim()) {
-      alert('Collection name is required');
+      setCollectionModalError('Collection name is required.');
       return;
     }
 
@@ -348,6 +375,7 @@ export default function AdminDashboardPage() {
     };
 
     try {
+      setSavingCollection(true);
       if (editingCollection) {
         await api.put(`/collections/${editingCollection.id}`, payload);
         showToast(`Collection "${payload.name}" updated.`);
@@ -356,9 +384,14 @@ export default function AdminDashboardPage() {
         showToast(`Collection "${payload.name}" created.`);
       }
       setCollectionModalOpen(false);
-      loadAdminData();
+      setEditingCollection(null);
+      setColForm(initialCollectionForm);
+      await loadAdminData();
     } catch (err) {
-      alert(err.message || 'Failed to save collection');
+      console.error('Save collection error:', err);
+      setCollectionModalError(err.message || 'Failed to save collection.');
+    } finally {
+      setSavingCollection(false);
     }
   };
 
@@ -1225,6 +1258,11 @@ export default function AdminDashboardPage() {
             </div>
 
             <form onSubmit={handleSaveProduct} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {productModalError && (
+                <div style={{ padding: '10px 14px', background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#991B1B', fontSize: '0.84rem', borderRadius: '2px' }}>
+                  {productModalError}
+                </div>
+              )}
               <div>
                 <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--brown-dark)', marginBottom: '4px' }}>
                   Product Name *
@@ -1440,16 +1478,18 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setProductModalOpen(false)}
-                  style={{ background: 'none', border: '1px solid #d4c5b9', padding: '10px 18px', fontSize: '0.84rem', cursor: 'pointer' }}
+                  disabled={savingProduct}
+                  style={{ background: 'none', border: '1px solid #d4c5b9', padding: '10px 18px', fontSize: '0.84rem', cursor: savingProduct ? 'not-allowed' : 'pointer', opacity: savingProduct ? 0.6 : 1 }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
+                  disabled={savingProduct}
                   className="btn btn-gold"
-                  style={{ padding: '10px 24px', fontSize: '0.84rem' }}
+                  style={{ padding: '10px 24px', fontSize: '0.84rem', cursor: savingProduct ? 'not-allowed' : 'pointer', opacity: savingProduct ? 0.7 : 1 }}
                 >
-                  {editingProduct ? 'UPDATE CLOTHING ITEM' : 'ADD TO CATALOG'}
+                  {savingProduct ? 'SAVING...' : (editingProduct ? 'UPDATE CLOTHING ITEM' : 'ADD TO CATALOG')}
                 </button>
               </div>
             </form>
@@ -1501,6 +1541,11 @@ export default function AdminDashboardPage() {
             </div>
 
             <form onSubmit={handleSaveCollection} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {collectionModalError && (
+                <div style={{ padding: '10px 14px', background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#991B1B', fontSize: '0.84rem', borderRadius: '2px' }}>
+                  {collectionModalError}
+                </div>
+              )}
               <div>
                 <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--brown-dark)', marginBottom: '4px' }}>
                   Collection Name *
@@ -1579,16 +1624,18 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setCollectionModalOpen(false)}
-                  style={{ background: 'none', border: '1px solid #d4c5b9', padding: '10px 18px', fontSize: '0.84rem', cursor: 'pointer' }}
+                  disabled={savingCollection}
+                  style={{ background: 'none', border: '1px solid #d4c5b9', padding: '10px 18px', fontSize: '0.84rem', cursor: savingCollection ? 'not-allowed' : 'pointer', opacity: savingCollection ? 0.6 : 1 }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
+                  disabled={savingCollection}
                   className="btn btn-gold"
-                  style={{ padding: '10px 24px', fontSize: '0.84rem' }}
+                  style={{ padding: '10px 24px', fontSize: '0.84rem', cursor: savingCollection ? 'not-allowed' : 'pointer', opacity: savingCollection ? 0.7 : 1 }}
                 >
-                  {editingCollection ? 'UPDATE COLLECTION' : 'CREATE COLLECTION'}
+                  {savingCollection ? 'SAVING...' : (editingCollection ? 'UPDATE COLLECTION' : 'CREATE COLLECTION')}
                 </button>
               </div>
             </form>
@@ -1634,16 +1681,18 @@ export default function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={() => setDeleteConfirm(null)}
-                style={{ padding: '10px 18px', background: 'none', border: '1px solid #d4c5b9', cursor: 'pointer', fontSize: '0.84rem' }}
+                disabled={isDeleting}
+                style={{ padding: '10px 18px', background: 'none', border: '1px solid #d4c5b9', cursor: isDeleting ? 'not-allowed' : 'pointer', fontSize: '0.84rem', opacity: isDeleting ? 0.6 : 1 }}
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmDelete}
-                style={{ padding: '10px 20px', background: '#991B1B', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 600 }}
+                disabled={isDeleting}
+                style={{ padding: '10px 20px', background: '#991B1B', color: '#fff', border: 'none', cursor: isDeleting ? 'not-allowed' : 'pointer', fontSize: '0.84rem', fontWeight: 600, opacity: isDeleting ? 0.7 : 1 }}
               >
-                Yes, Delete
+                {isDeleting ? 'DELETING...' : 'Yes, Delete'}
               </button>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '../../../lib/auth';
 const db = require('../../../lib/db');
 
@@ -20,7 +21,7 @@ export async function GET(req) {
   } catch (err) {
     console.error('[API /api/products GET Error]', err);
     return NextResponse.json(
-      { success: false, message: 'Failed to retrieve products' },
+      { success: false, message: 'Failed to retrieve products: ' + err.message },
       { status: 500 }
     );
   }
@@ -32,14 +33,30 @@ export async function POST(req) {
     if (errorResponse) return errorResponse;
 
     const body = await req.json();
-    if (!body.name || !body.price) {
+    if (!body.name || !body.name.trim()) {
       return NextResponse.json(
-        { success: false, message: 'Product name and price are required' },
+        { success: false, message: 'Product name is required' },
+        { status: 400 }
+      );
+    }
+    if (body.price === undefined || body.price === null || isNaN(parseFloat(body.price))) {
+      return NextResponse.json(
+        { success: false, message: 'A valid product purchase price is required' },
         { status: 400 }
       );
     }
 
     const created = await db.product.create({ data: body });
+
+    // Invalidate static caches so new garment immediately appears on storefront
+    try {
+      revalidatePath('/shop');
+      revalidatePath('/collections');
+      revalidatePath('/');
+    } catch (e) {
+      // non-blocking
+    }
+
     return NextResponse.json(
       {
         success: true,
@@ -51,7 +68,7 @@ export async function POST(req) {
   } catch (err) {
     console.error('[API /api/products POST Error]', err);
     return NextResponse.json(
-      { success: false, message: 'Failed to create product' },
+      { success: false, message: err.message || 'Failed to create product' },
       { status: 500 }
     );
   }

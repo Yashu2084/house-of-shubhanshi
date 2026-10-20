@@ -2,6 +2,26 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '../../../../lib/auth';
 const db = require('../../../../lib/db');
 
+export const dynamic = 'force-dynamic';
+
+export async function GET(req) {
+  try {
+    const { user, errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
+    return NextResponse.json({
+      success: true,
+      data: { user }
+    });
+  } catch (err) {
+    console.error('[API /api/auth/profile GET Error]', err);
+    return NextResponse.json(
+      { success: false, message: 'Failed to retrieve profile' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PUT(req) {
   try {
     const { user, errorResponse } = await requireAuth(req);
