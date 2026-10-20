@@ -18,7 +18,7 @@ const DEFAULT_ADMIN = {
   name: 'House of Shubhanshi Atelier',
   email: 'admin@houseofshubhanshi.com',
   phone: '+91 9560011351',
-  passwordHash: '$2a$10$DLx5rj2avGproI71zsDWaOhE/Tw3pTyFQbssA3iGYeR9gahPLv1jq', // Admin@Shubhanshi2026!
+  passwordHash: '$2b$10$aevfzhTBrx9AzfkhuGy5HeUCqwetZ.9HrSBHxdltNJw.Sba4QS1zu', // Admin@Shubhanshi2026!
   role: 'ADMIN',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString()
@@ -170,6 +170,13 @@ function loadMemStore() {
     if (fs.existsSync(filePath)) {
       const content = fs.readFileSync(filePath, 'utf-8');
       memStore = JSON.parse(content);
+      if (memStore && Array.isArray(memStore.users)) {
+        const adminUser = memStore.users.find(u => u.email.toLowerCase() === DEFAULT_ADMIN.email.toLowerCase());
+        if (adminUser && adminUser.passwordHash === '$2a$10$DLx5rj2avGproI71zsDWaOhE/Tw3pTyFQbssA3iGYeR9gahPLv1jq') {
+          adminUser.passwordHash = DEFAULT_ADMIN.passwordHash;
+          saveMemStore();
+        }
+      }
       return memStore;
     }
   } catch (e) {
@@ -356,13 +363,15 @@ async function ensureTables() {
     `);
 
     // Ensure default admin exists
-    const adminCheck = await pool.query('SELECT id FROM users WHERE LOWER(email) = $1', [DEFAULT_ADMIN.email.toLowerCase()]);
+    const adminCheck = await pool.query('SELECT id, password_hash FROM users WHERE LOWER(email) = $1', [DEFAULT_ADMIN.email.toLowerCase()]);
     if (adminCheck.rows.length === 0) {
       await pool.query(
         `INSERT INTO users (id, name, email, phone, password_hash, role, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) ON CONFLICT (email) DO NOTHING`,
         [DEFAULT_ADMIN.id, DEFAULT_ADMIN.name, DEFAULT_ADMIN.email.toLowerCase(), DEFAULT_ADMIN.phone, DEFAULT_ADMIN.passwordHash, DEFAULT_ADMIN.role]
       );
+    } else if (adminCheck.rows[0]?.password_hash === '$2a$10$DLx5rj2avGproI71zsDWaOhE/Tw3pTyFQbssA3iGYeR9gahPLv1jq') {
+      await pool.query('UPDATE users SET password_hash = $1 WHERE LOWER(email) = $2', [DEFAULT_ADMIN.passwordHash, DEFAULT_ADMIN.email.toLowerCase()]);
     }
 
     // Ensure default collections exist if table is empty

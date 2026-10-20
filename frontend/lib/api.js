@@ -37,6 +37,15 @@ async function request(endpoint, options = {}) {
     ...(options.headers || {})
   };
 
+  if (typeof window !== 'undefined') {
+    try {
+      const storedToken = localStorage.getItem('auth_token');
+      if (storedToken && !headers['Authorization'] && !headers['authorization']) {
+        headers['Authorization'] = `Bearer ${storedToken}`;
+      }
+    } catch (e) {}
+  }
+
   const config = {
     ...options,
     headers,

@@ -29,15 +29,15 @@ export default function AdminLoginPage() {
 
     try {
       const res = await login(email.trim().toLowerCase(), password);
-      if (res && res.success) {
-        const loggedUser = res.data?.user || res.user;
-        if (loggedUser?.role === 'ADMIN') {
+      const loggedUser = res?.role ? res : (res?.data?.user || res?.user);
+      if (loggedUser) {
+        if (loggedUser.role === 'ADMIN') {
           router.push('/admin');
         } else {
           setError('Access Restricted: This account does not possess Atelier Administrator credentials.');
         }
       } else {
-        setError(res?.message || 'Invalid administrator email or password.');
+        setError('Invalid administrator email or password.');
       }
     } catch (err) {
       console.error('Admin login error:', err);

@@ -36,6 +36,10 @@ export function AuthProvider({ children }) {
     try {
       const res = await api.post('/auth/login', { email, password, rememberMe });
       if (res && res.success) {
+        const token = res.token || res.data?.token;
+        if (token && typeof window !== 'undefined') {
+          try { localStorage.setItem('auth_token', token); } catch (e) {}
+        }
         // Immediately verify backend session cookie via /api/auth/me
         const meRes = await api.get('/auth/me');
         const verifiedUser = (meRes && (meRes.user || (meRes.data && meRes.data.user)))
@@ -56,6 +60,10 @@ export function AuthProvider({ children }) {
     try {
       const res = await api.post('/auth/signup', payload);
       if (res && res.success) {
+        const token = res.token || res.data?.token;
+        if (token && typeof window !== 'undefined') {
+          try { localStorage.setItem('auth_token', token); } catch (e) {}
+        }
         // Immediately verify backend session cookie via /api/auth/me
         const meRes = await api.get('/auth/me');
         const verifiedUser = (meRes && (meRes.user || (meRes.data && meRes.data.user)))
@@ -73,6 +81,9 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     setLoading(true);
     try {
+      if (typeof window !== 'undefined') {
+        try { localStorage.removeItem('auth_token'); } catch (e) {}
+      }
       await api.post('/auth/logout');
     } catch (err) {
       console.error('Logout error:', err);

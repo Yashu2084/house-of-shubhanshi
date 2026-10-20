@@ -149,7 +149,15 @@ export async function requireAdmin(req) {
 
 export function createAuthResponse(payload, user, status = 200) {
   const token = signToken(user);
-  const response = NextResponse.json(payload, { status });
+  const responseData = {
+    ...payload,
+    token,
+    data: {
+      ...(payload.data || {}),
+      token
+    }
+  };
+  const response = NextResponse.json(responseData, { status });
 
   response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,

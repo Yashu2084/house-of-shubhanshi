@@ -9,6 +9,13 @@ export async function GET() {
     status: result.ok ? 'ok' : 'degraded',
     database: result.type || (result.ok ? 'connected' : 'fallback'),
     error: result.error || null,
+    env: {
+      hasDatabaseUrl: !!process.env.DATABASE_URL,
+      hasPostgresUrl: !!process.env.POSTGRES_URL,
+      hasBackendUrl: !!process.env.BACKEND_URL,
+      hasBlobToken: !!process.env.BLOB_READ_WRITE_TOKEN,
+      hasJwtSecret: !!process.env.JWT_SECRET
+    },
     timestamp: new Date().toISOString()
   });
 }
