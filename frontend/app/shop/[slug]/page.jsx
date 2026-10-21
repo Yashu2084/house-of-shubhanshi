@@ -33,9 +33,10 @@ export default function ProductDetailPage() {
       if (!slug) return;
       try {
         setLoading(true);
+        const cacheBust = Date.now();
         let found = null;
         try {
-          const res = await api.get(`/products/${slug}`);
+          const res = await api.get(`/products/${slug}?_t=${cacheBust}`);
           if (res && res.success && res.data) {
             found = res.data;
           }
@@ -44,7 +45,7 @@ export default function ProductDetailPage() {
         }
 
         if (!found) {
-          const listRes = await api.get('/products');
+          const listRes = await api.get(`/products?_t=${cacheBust}`);
           if (listRes && listRes.success && Array.isArray(listRes.data)) {
             found = listRes.data.find(p => p.id === slug || p.slug === slug);
           }

@@ -14,10 +14,20 @@ export async function GET(req) {
       includeInactive ? {} : { where: { isActive: true } }
     );
 
-    return NextResponse.json({
-      success: true,
-      data: collections
-    });
+    const noCacheHeaders = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Surrogate-Control': 'no-store'
+    };
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: collections
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error('[API /api/collections GET Error]', err);
     return NextResponse.json(
@@ -43,12 +53,19 @@ export async function POST(req) {
     const created = await db.collection.create({ data: body });
 
     try {
-      revalidatePath('/collections');
-      revalidatePath('/shop');
-      revalidatePath('/');
+      revalidatePath('/', 'page');
+      revalidatePath('/', 'layout');
+      revalidatePath('/collections', 'page');
+      revalidatePath('/shop', 'page');
     } catch (e) {
       // non-blocking
     }
+
+    const noCacheHeaders = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
 
     return NextResponse.json(
       {
@@ -56,7 +73,7 @@ export async function POST(req) {
         message: 'Collection created successfully',
         data: created
       },
-      { status: 201 }
+      { status: 201, headers: noCacheHeaders }
     );
   } catch (err) {
     console.error('[API /api/collections POST Error]', err);

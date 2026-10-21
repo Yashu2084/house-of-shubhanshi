@@ -27,10 +27,20 @@ export async function GET(req, { params }) {
       // non-blocking
     }
 
-    return NextResponse.json({
-      success: true,
-      data: product
-    });
+    const noCacheHeaders = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Surrogate-Control': 'no-store'
+    };
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: product
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error('[API /api/products/[id] GET Error]', err);
     return NextResponse.json(
@@ -61,20 +71,30 @@ async function handleUpdate(req, { params }) {
     }
 
     try {
-      revalidatePath('/shop');
-      if (updated.slug) revalidatePath(`/shop/${updated.slug}`);
-      revalidatePath(`/shop/${id}`);
-      revalidatePath('/collections');
-      revalidatePath('/');
+      revalidatePath('/', 'page');
+      revalidatePath('/', 'layout');
+      revalidatePath('/shop', 'page');
+      if (updated.slug) revalidatePath(`/shop/${updated.slug}`, 'page');
+      revalidatePath(`/shop/${id}`, 'page');
+      revalidatePath('/collections', 'page');
     } catch (e) {
       // non-blocking
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Product updated successfully',
-      data: updated
-    });
+    const noCacheHeaders = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Product updated successfully',
+        data: updated
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error('[API /api/products/[id] PUT/PATCH Error]', err);
     return NextResponse.json(
@@ -110,19 +130,30 @@ export async function DELETE(req, { params }) {
     }
 
     try {
-      revalidatePath('/shop');
-      if (removed.slug) revalidatePath(`/shop/${removed.slug}`);
-      revalidatePath('/collections');
-      revalidatePath('/');
+      revalidatePath('/', 'page');
+      revalidatePath('/', 'layout');
+      revalidatePath('/shop', 'page');
+      if (removed.slug) revalidatePath(`/shop/${removed.slug}`, 'page');
+      revalidatePath(`/shop/${id}`, 'page');
+      revalidatePath('/collections', 'page');
     } catch (e) {
       // non-blocking
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Product permanently removed from active catalog',
-      data: removed
-    });
+    const noCacheHeaders = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Product permanently removed from active catalog',
+        data: removed
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error('[API /api/products/[id] DELETE Error]', err);
     return NextResponse.json(

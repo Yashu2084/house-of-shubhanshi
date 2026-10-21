@@ -12,7 +12,7 @@ const FEATURED_PRODUCTS_FALLBACK = [
   {
     id: 'prod_real_purple',
     name: 'Purple Embroidered Kurta Set',
-    slug: 'purple-embroidered-kurta-set',
+    slug: 'purple-suit-set',
     category: 'Suit Sets',
     price: 4499,
     isRentable: true,
@@ -31,7 +31,7 @@ const FEATURED_PRODUCTS_FALLBACK = [
   {
     id: 'prod_real_brown',
     name: 'Earth Brown Flared Lehenga Set',
-    slug: 'earth-brown-flared-lehenga-set',
+    slug: 'brown-lehenga-set',
     category: 'Lehengas',
     price: 5599,
     isRentable: true,
@@ -50,7 +50,7 @@ const FEATURED_PRODUCTS_FALLBACK = [
   {
     id: 'prod_real_green',
     name: 'Emerald Green Flared Anarkali Set',
-    slug: 'emerald-green-flared-anarkali-set',
+    slug: 'green-anarkali-set',
     category: 'Anarkalis',
     price: 6699,
     isRentable: true,
@@ -76,9 +76,19 @@ export default function HomePage() {
   useEffect(() => {
     async function loadProducts() {
       try {
-        const res = await api.get('/products');
+        const cacheBust = Date.now();
+        const res = await api.get(`/products?_t=${cacheBust}`);
         if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
-          setFeaturedProducts(res.data.slice(0, 6));
+          const activeProducts = res.data.filter(p => p.isActive !== false);
+          if (activeProducts.length > 0) {
+            // Prioritize featured garments, followed by newest arrivals
+            const featuredOnly = activeProducts.filter(p => p.featured);
+            const regular = activeProducts.filter(p => !p.featured);
+            featuredOnly.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            regular.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            const curated = featuredOnly.length > 0 ? [...featuredOnly, ...regular] : regular;
+            setFeaturedProducts(curated.slice(0, 8));
+          }
         }
       } catch (e) {
         // Fallback already pre-populated with real collection

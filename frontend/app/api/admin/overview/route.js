@@ -31,18 +31,28 @@ export async function GET(req) {
       .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
       .slice(0, 5);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        totalProducts,
-        activeProducts,
-        totalCollections: collections.length,
-        activeCollections,
-        totalCustomers,
-        topViewedProducts,
-        recentlyAdded
-      }
-    });
+    const noCacheHeaders = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Surrogate-Control': 'no-store'
+    };
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          totalProducts,
+          activeProducts,
+          totalCollections: collections.length,
+          activeCollections,
+          totalCustomers,
+          topViewedProducts,
+          recentlyAdded
+        }
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error('[API /api/admin/overview GET Error]', err);
     return NextResponse.json(

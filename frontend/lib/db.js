@@ -586,9 +586,7 @@ const db = {
         try {
           await ensureTables();
           const res = await pool.query('SELECT id, name, email, phone, role, dob, created_at as "createdAt" FROM users ORDER BY created_at DESC');
-          if (res.rows && res.rows.length > 0) {
-            return res.rows;
-          }
+          return res.rows || [];
         } catch (e) {
           console.warn('[DB Users findMany Error]', e.message);
         }
@@ -604,16 +602,109 @@ const db = {
       if (pool) {
         try {
           await ensureTables();
-          let sql = 'SELECT * FROM products';
+          let sql = `
+            SELECT p.*, c.name as collection_name, c.slug as collection_slug
+            FROM products p
+            LEFT JOIN collections c ON p.collection_id = c.id
+            WHERE 1=1
+          `;
           const params = [];
+          let paramIdx = 1;
           if (where.isActive !== undefined) {
-            sql += ' WHERE is_active = $1';
+            sql += ` AND p.is_active = $${paramIdx++}`;
             params.push(where.isActive);
           }
-          sql += ' ORDER BY created_at DESC';
+          if (where.collectionId) {
+            sql += ` AND (p.collection_id = $${paramIdx} OR c.slug = $${paramIdx})`;
+            params.push(where.collectionId);
+            paramIdx++;
+          }
+          if (where.featured !== undefined) {
+            sql += ` AND p.featured = $${paramIdx++}`;
+            params.push(where.featured);
+          }
+          sql += ' ORDER BY p.created_at DESC';
+          const res = await pool.query(sql, params);
+          return (res.rows || []).map(r => ({
+            id: r.id,
+            name: r.name,
+            slug: r.slug,
+            description: r.description,
+            price: parseFloat(r.price),
+            compareAtPrice: r.compare_at_price ? parseFloat(r.compare_at_price) : null,
+            image: r.image,
+            images: r.images,
+            category: r.category,
+            fabric: r.fabric,
+            color: r.color,
+            size: r.size,
+            material: r.material,
+            featured: !!r.featured,
+            stock: parseInt(r.stock, 10),
+            isActive: !!r.is_active,
+            collectionId: r.collection_id,
+            collection: r.collection_id ? {
+              id: r.collection_id,
+              name: r.collection_name,
+              slug: r.collection_slug
+            } : null,
+            isRentable: !!r.is_rentable,
+            rentalBasePrice: r.rental_base_price ? parseFloat(r.rental_base_price) : 0,
+            rentalPricePerDay: r.rental_price_per_day ? parseFloat(r.rental_price_per_day) : 0,
+            minimumRentalDays: r.minimum_rental_days ? parseInt(r.minimum_rental_days, 10) : 1,
+            maximumRentalDays: r.maximum_rental_days ? parseInt(r.maximum_rental_days, 10) : 14,
+            rentalDeposit: r.rental_deposit ? parseFloat(r.rental_deposit) : 0,
+            rentalAvailableStock: r.rental_available_stock ? parseInt(r.rental_available_stock, 10) : 1,
+            views: parseInt(r.views || 0, 10),
+            lengths: r.lengths || 'Standard (42"), Petite (39"), Tall (45"), Custom',
+            customLengthAvailable: r.custom_length_available !== undefined ? !!r.custom_length_available : true,
+            createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString()
+          }));
+        } catch (e) {
+          console.warn('[DB Product findMany Error]', e.message);
+        }
+      }
+
+      const store = loadMemStore();
+      let list = store.products.map(p => ({
+        ...p,
+        collection: p.collectionId ? store.collections.find(c => c.id === p.collectionId) || null : null
+      }));
+      if (where.isActive !== undefined) {
+        list = list.filter(p => p.isActive === where.isActive);
+      }
+      if (where.collectionId) {
+        list = list.filter(p => p.collectionId === where.collectionId || p.collection?.slug === where.collectionId);
+      }
+      if (where.featured !== undefined) {
+        list = list.filter(p => p.featured === where.featured);
+      }
+      return list;
+    },
+
+    async findUnique({ where }) {
+      const pool = getPgPool();
+      if (pool && (where.id || where.slug)) {
+        try {
+          await ensureTables();
+          let sql = `
+            SELECT p.*, c.name as collection_name, c.slug as collection_slug
+            FROM products p
+            LEFT JOIN collections c ON p.collection_id = c.id
+            WHERE 1=1
+          `;
+          const params = [];
+          if (where.id) {
+            sql += ' AND (p.id = $1 OR p.slug = $1)';
+            params.push(where.id);
+          } else if (where.slug) {
+            sql += ' AND p.slug = $1';
+            params.push(where.slug);
+          }
           const res = await pool.query(sql, params);
           if (res.rows && res.rows.length > 0) {
-            return res.rows.map(r => ({
+            const r = res.rows[0];
+            return {
               id: r.id,
               name: r.name,
               slug: r.slug,
@@ -631,6 +722,11 @@ const db = {
               stock: parseInt(r.stock, 10),
               isActive: !!r.is_active,
               collectionId: r.collection_id,
+              collection: r.collection_id ? {
+                id: r.collection_id,
+                name: r.collection_name,
+                slug: r.collection_slug
+              } : null,
               isRentable: !!r.is_rentable,
               rentalBasePrice: r.rental_base_price ? parseFloat(r.rental_base_price) : 0,
               rentalPricePerDay: r.rental_price_per_day ? parseFloat(r.rental_price_per_day) : 0,
@@ -642,25 +738,17 @@ const db = {
               lengths: r.lengths || 'Standard (42"), Petite (39"), Tall (45"), Custom',
               customLengthAvailable: r.custom_length_available !== undefined ? !!r.custom_length_available : true,
               createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString()
-            }));
+            };
           }
+          return null;
         } catch (e) {
-          console.warn('[DB Product findMany Error]', e.message);
+          console.warn('[DB Product findUnique Error]', e.message);
         }
       }
 
-      const store = loadMemStore();
-      let list = store.products;
-      if (where.isActive !== undefined) {
-        list = list.filter(p => p.isActive === where.isActive);
-      }
-      return list;
-    },
-
-    async findUnique({ where }) {
       const all = await db.product.findMany();
-      if (where.id) return all.find(p => p.id === where.id) || null;
-      if (where.slug) return all.find(p => p.slug === where.slug) || null;
+      if (where.id) return all.find(p => p.id === where.id || p.slug === where.id) || null;
+      if (where.slug) return all.find(p => p.slug === where.slug || p.id === where.slug) || null;
       return null;
     },
 
@@ -713,10 +801,13 @@ const db = {
         try {
           await ensureTables();
 
-          // Verify collection exists if provided; otherwise nullify to avoid foreign key failure
+          // Verify collection exists if provided (supports matching by ID or Slug)
           if (sanitizedCollectionId) {
-            const colCheck = await pool.query('SELECT id FROM collections WHERE id = $1', [sanitizedCollectionId]);
-            if (colCheck.rows.length === 0) {
+            const colCheck = await pool.query('SELECT id FROM collections WHERE id = $1 OR slug = $1', [sanitizedCollectionId]);
+            if (colCheck.rows.length > 0) {
+              sanitizedCollectionId = colCheck.rows[0].id;
+              newProd.collectionId = colCheck.rows[0].id;
+            } else {
               sanitizedCollectionId = null;
               newProd.collectionId = null;
             }
@@ -768,9 +859,10 @@ const db = {
       const pool = getPgPool();
       let updatedProd = null;
 
-      if (pool && where.id) {
+      if (pool && (where.id || where.slug)) {
         try {
           await ensureTables();
+          const targetKey = where.id || where.slug;
           const fields = [];
           const params = [];
           let paramIdx = 1;
@@ -797,8 +889,12 @@ const db = {
           if (data.collectionId !== undefined) {
             let colId = data.collectionId && data.collectionId !== 'none' ? data.collectionId : null;
             if (colId) {
-              const colCheck = await pool.query('SELECT id FROM collections WHERE id = $1', [colId]);
-              if (colCheck.rows.length === 0) colId = null;
+              const colCheck = await pool.query('SELECT id FROM collections WHERE id = $1 OR slug = $1', [colId]);
+              if (colCheck.rows.length > 0) {
+                colId = colCheck.rows[0].id;
+              } else {
+                colId = null;
+              }
             }
             fields.push(`collection_id = $${paramIdx++}`);
             params.push(colId);
@@ -822,9 +918,9 @@ const db = {
 
           if (fields.length > 0) {
             fields.push(`updated_at = NOW()`);
-            params.push(where.id);
+            params.push(targetKey);
             const updateRes = await pool.query(
-              `UPDATE products SET ${fields.join(', ')} WHERE id = $${paramIdx} RETURNING *`,
+              `UPDATE products SET ${fields.join(', ')} WHERE (id = $${paramIdx} OR slug = $${paramIdx}) RETURNING *`,
               params
             );
             if (updateRes.rows && updateRes.rows.length > 0) {
@@ -868,7 +964,7 @@ const db = {
       }
 
       const store = loadMemStore();
-      const idx = store.products.findIndex(p => p.id === where.id);
+      const idx = store.products.findIndex(p => p.id === where.id || p.slug === where.id || (where.slug && (p.slug === where.slug || p.id === where.slug)));
       if (idx !== -1) {
         store.products[idx] = { ...store.products[idx], ...data, updatedAt: new Date().toISOString() };
         saveMemStore();
@@ -900,25 +996,26 @@ const db = {
       const pool = getPgPool();
       let removed = null;
 
-      if (pool && where.id) {
+      if (pool && (where.id || where.slug)) {
         try {
           await ensureTables();
-          const res = await pool.query('DELETE FROM products WHERE id = $1 RETURNING *', [where.id]);
+          const targetKey = where.id || where.slug;
+          const res = await pool.query('DELETE FROM products WHERE id = $1 OR slug = $1 RETURNING *', [targetKey]);
           if (res.rows && res.rows.length > 0) {
             removed = res.rows[0];
           }
         } catch (pgErr) {
           console.error('[DB Product Delete PG Error]', pgErr.message);
-          // If foreign key constraint prevents permanent deletion, deactivate instead
           try {
-            await pool.query('UPDATE products SET is_active = FALSE, updated_at = NOW() WHERE id = $1', [where.id]);
+            const targetKey = where.id || where.slug;
+            await pool.query('UPDATE products SET is_active = FALSE, updated_at = NOW() WHERE id = $1 OR slug = $1', [targetKey]);
           } catch (e2) {}
           throw new Error('Database delete error: ' + pgErr.message);
         }
       }
 
       const store = loadMemStore();
-      const idx = store.products.findIndex(p => p.id === where.id);
+      const idx = store.products.findIndex(p => p.id === where.id || p.slug === where.id || (where.slug && (p.slug === where.slug || p.id === where.slug)));
       if (idx !== -1) {
         const memRemoved = store.products.splice(idx, 1)[0];
         saveMemStore();
@@ -934,25 +1031,24 @@ const db = {
       if (pool) {
         try {
           await ensureTables();
-          let sql = 'SELECT * FROM collections';
+          let sql = 'SELECT * FROM collections WHERE 1=1';
           const params = [];
+          let paramIdx = 1;
           if (where.isActive !== undefined) {
-            sql += ' WHERE is_active = $1';
+            sql += ` AND is_active = $${paramIdx++}`;
             params.push(where.isActive);
           }
           sql += ' ORDER BY created_at ASC';
           const res = await pool.query(sql, params);
-          if (res.rows && res.rows.length > 0) {
-            return res.rows.map(r => ({
-              id: r.id,
-              name: r.name,
-              slug: r.slug,
-              description: r.description,
-              image: r.image,
-              isActive: !!r.is_active,
-              createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString()
-            }));
-          }
+          return (res.rows || []).map(r => ({
+            id: r.id,
+            name: r.name,
+            slug: r.slug,
+            description: r.description,
+            image: r.image,
+            isActive: !!r.is_active,
+            createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString()
+          }));
         } catch (e) {
           console.warn('[DB Collection findMany PG Error]', e.message);
         }
@@ -967,9 +1063,41 @@ const db = {
     },
 
     async findUnique({ where }) {
+      const pool = getPgPool();
+      if (pool && (where.id || where.slug)) {
+        try {
+          await ensureTables();
+          let sql = 'SELECT * FROM collections WHERE ';
+          const params = [];
+          if (where.id) {
+            sql += 'id = $1 OR slug = $1';
+            params.push(where.id);
+          } else if (where.slug) {
+            sql += 'slug = $1';
+            params.push(where.slug);
+          }
+          const res = await pool.query(sql, params);
+          if (res.rows && res.rows.length > 0) {
+            const r = res.rows[0];
+            return {
+              id: r.id,
+              name: r.name,
+              slug: r.slug,
+              description: r.description,
+              image: r.image,
+              isActive: !!r.is_active,
+              createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString()
+            };
+          }
+          return null;
+        } catch (e) {
+          console.warn('[DB Collection findUnique PG Error]', e.message);
+        }
+      }
+
       const all = await db.collection.findMany();
-      if (where.id) return all.find(c => c.id === where.id) || null;
-      if (where.slug) return all.find(c => c.slug === where.slug) || null;
+      if (where.id) return all.find(c => c.id === where.id || c.slug === where.id) || null;
+      if (where.slug) return all.find(c => c.slug === where.slug || c.id === where.slug) || null;
       return null;
     },
 
@@ -1011,9 +1139,10 @@ const db = {
       const pool = getPgPool();
       let updatedCol = null;
 
-      if (pool && where.id) {
+      if (pool && (where.id || where.slug)) {
         try {
           await ensureTables();
+          const targetKey = where.id || where.slug;
           const fields = [];
           const params = [];
           let paramIdx = 1;
@@ -1025,9 +1154,9 @@ const db = {
 
           if (fields.length > 0) {
             fields.push(`updated_at = NOW()`);
-            params.push(where.id);
+            params.push(targetKey);
             const res = await pool.query(
-              `UPDATE collections SET ${fields.join(', ')} WHERE id = $${paramIdx} RETURNING *`,
+              `UPDATE collections SET ${fields.join(', ')} WHERE (id = $${paramIdx} OR slug = $${paramIdx}) RETURNING *`,
               params
             );
             if (res.rows && res.rows.length > 0) {
@@ -1050,7 +1179,7 @@ const db = {
       }
 
       const store = loadMemStore();
-      const idx = store.collections.findIndex(c => c.id === where.id);
+      const idx = store.collections.findIndex(c => c.id === where.id || c.slug === where.id || (where.slug && (c.slug === where.slug || c.id === where.slug)));
       if (idx !== -1) {
         store.collections[idx] = { ...store.collections[idx], ...data, updatedAt: new Date().toISOString() };
         saveMemStore();
@@ -1063,12 +1192,16 @@ const db = {
       const pool = getPgPool();
       let removed = null;
 
-      if (pool && where.id) {
+      if (pool && (where.id || where.slug)) {
         try {
           await ensureTables();
+          const targetKey = where.id || where.slug;
           // Nullify foreign key references on associated products first
-          await pool.query('UPDATE products SET collection_id = NULL WHERE collection_id = $1', [where.id]);
-          const res = await pool.query('DELETE FROM collections WHERE id = $1 RETURNING *', [where.id]);
+          await pool.query(
+            'UPDATE products SET collection_id = NULL WHERE collection_id = $1 OR collection_id IN (SELECT id FROM collections WHERE slug = $1)',
+            [targetKey]
+          );
+          const res = await pool.query('DELETE FROM collections WHERE id = $1 OR slug = $1 RETURNING *', [targetKey]);
           if (res.rows && res.rows.length > 0) {
             removed = res.rows[0];
           }
@@ -1079,7 +1212,17 @@ const db = {
       }
 
       const store = loadMemStore();
-      const idx = store.collections.findIndex(c => c.id === where.id);
+      // Nullify references in memStore products
+      const targetCol = store.collections.find(c => c.id === where.id || c.slug === where.id || (where.slug && (c.slug === where.slug || c.id === where.slug)));
+      if (targetCol) {
+        store.products.forEach(p => {
+          if (p.collectionId === targetCol.id || p.collectionId === targetCol.slug) {
+            p.collectionId = null;
+          }
+        });
+      }
+
+      const idx = store.collections.findIndex(c => c.id === where.id || c.slug === where.id || (where.slug && (c.slug === where.slug || c.id === where.slug)));
       if (idx !== -1) {
         const memRemoved = store.collections.splice(idx, 1)[0];
         saveMemStore();

@@ -1,11 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ProductGrid from '../../components/ProductGrid';
 import ProductModal from '../../components/ProductModal';
 import api from '../../lib/api';
 
-export default function ShopPage() {
+function ShopContent() {
+  const searchParams = useSearchParams();
+  const collectionParam = searchParams.get('collection');
+
   const [products, setProducts] = useState([]);
   const [collections, setCollections] = useState([]);
   const [selectedCollection, setSelectedCollection] = useState('all');
@@ -17,16 +21,27 @@ export default function ShopPage() {
     async function loadShopData() {
       try {
         setLoading(true);
+        const cacheBust = Date.now();
         const [prodRes, colRes] = await Promise.all([
-          api.get('/products'),
-          api.get('/collections')
+          api.get(`/products?_t=${cacheBust}`),
+          api.get(`/collections?_t=${cacheBust}`)
         ]);
 
         if (prodRes && prodRes.success) {
           setProducts(prodRes.data || []);
         }
         if (colRes && colRes.success) {
-          setCollections(colRes.data || []);
+          const cols = colRes.data || [];
+          setCollections(cols);
+
+          if (collectionParam) {
+            const matched = cols.find(c => c.id === collectionParam || c.slug === collectionParam);
+            if (matched) {
+              setSelectedCollection(matched.id);
+            } else {
+              setSelectedCollection(collectionParam);
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to load shop catalog:', err);
@@ -36,11 +51,18 @@ export default function ShopPage() {
       }
     }
     loadShopData();
-  }, []);
+  }, [collectionParam]);
 
   const filteredProducts = selectedCollection === 'all'
     ? products
-    : products.filter(p => p.collectionId === selectedCollection);
+    : products.filter(p => {
+        if (!p) return false;
+        if (p.collectionId === selectedCollection) return true;
+        if (p.collection && (p.collection.id === selectedCollection || p.collection.slug === selectedCollection)) return true;
+        const matchedCol = collections.find(c => c.id === selectedCollection || c.slug === selectedCollection);
+        if (matchedCol && (p.collectionId === matchedCol.id || p.collectionId === matchedCol.slug)) return true;
+        return false;
+      });
 
   return (
     <main style={{ paddingTop: '130px', minHeight: '80vh', paddingBottom: '80px', backgroundColor: 'var(--ivory)' }}>
@@ -84,5 +106,20 @@ export default function ShopPage() {
         />
       )}
     </main>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={
+      <main style={{ paddingTop: '130px', minHeight: '80vh', textAlign: 'center', backgroundColor: 'var(--ivory)' }}>
+        <p style={{ fontFamily: 'var(--font-serif)', fontSize: '1.8rem', color: 'var(--gold)', marginTop: '40px' }}>✦</p>
+        <p style={{ color: 'var(--text-brown)', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '0.85rem' }}>
+          Loading the collection...
+        </p>
+      </main>
+    }>
+      <ShopContent />
+    </Suspense>
   );
 }

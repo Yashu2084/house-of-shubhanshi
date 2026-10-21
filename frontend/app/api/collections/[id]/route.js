@@ -20,10 +20,20 @@ export async function GET(req, { params }) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      data: collection
-    });
+    const noCacheHeaders = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Surrogate-Control': 'no-store'
+    };
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: collection
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error('[API /api/collections/[id] GET Error]', err);
     return NextResponse.json(
@@ -54,18 +64,28 @@ async function handleUpdate(req, { params }) {
     }
 
     try {
-      revalidatePath('/collections');
-      revalidatePath('/shop');
-      revalidatePath('/');
+      revalidatePath('/', 'page');
+      revalidatePath('/', 'layout');
+      revalidatePath('/collections', 'page');
+      revalidatePath('/shop', 'page');
     } catch (e) {
       // non-blocking
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Collection updated successfully',
-      data: updated
-    });
+    const noCacheHeaders = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Collection updated successfully',
+        data: updated
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error('[API /api/collections/[id] PUT/PATCH Error]', err);
     return NextResponse.json(
@@ -101,18 +121,28 @@ export async function DELETE(req, { params }) {
     }
 
     try {
-      revalidatePath('/collections');
-      revalidatePath('/shop');
-      revalidatePath('/');
+      revalidatePath('/', 'page');
+      revalidatePath('/', 'layout');
+      revalidatePath('/collections', 'page');
+      revalidatePath('/shop', 'page');
     } catch (e) {
       // non-blocking
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Collection deleted successfully',
-      data: removed
-    });
+    const noCacheHeaders = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Collection deleted successfully',
+        data: removed
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error('[API /api/collections/[id] DELETE Error]', err);
     return NextResponse.json(

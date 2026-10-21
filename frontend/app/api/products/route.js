@@ -14,10 +14,20 @@ export async function GET(req) {
       includeInactive ? {} : { where: { isActive: true } }
     );
 
-    return NextResponse.json({
-      success: true,
-      data: products
-    });
+    const noCacheHeaders = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Surrogate-Control': 'no-store'
+    };
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: products
+      },
+      { headers: noCacheHeaders }
+    );
   } catch (err) {
     console.error('[API /api/products GET Error]', err);
     return NextResponse.json(
@@ -48,14 +58,23 @@ export async function POST(req) {
 
     const created = await db.product.create({ data: body });
 
-    // Invalidate static caches so new garment immediately appears on storefront
+    // Invalidate static caches so new garment immediately appears across all pages
     try {
-      revalidatePath('/shop');
-      revalidatePath('/collections');
-      revalidatePath('/');
+      revalidatePath('/', 'page');
+      revalidatePath('/', 'layout');
+      revalidatePath('/shop', 'page');
+      revalidatePath('/collections', 'page');
+      if (created.slug) revalidatePath(`/shop/${created.slug}`, 'page');
+      if (created.id) revalidatePath(`/shop/${created.id}`, 'page');
     } catch (e) {
       // non-blocking
     }
+
+    const noCacheHeaders = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
 
     return NextResponse.json(
       {
@@ -63,7 +82,7 @@ export async function POST(req) {
         message: 'Product created successfully',
         data: created
       },
-      { status: 201 }
+      { status: 201, headers: noCacheHeaders }
     );
   } catch (err) {
     console.error('[API /api/products POST Error]', err);
