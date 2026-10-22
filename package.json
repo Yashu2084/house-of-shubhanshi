@@ -13,7 +13,10 @@
     "frontend:start": "npm --prefix frontend run start",
     "db:init": "node backend/src/config/initDb.js",
     "seed": "node backend/src/config/initDb.js",
-    "admin:create": "node backend/src/scripts/create-admin.js"
+    "admin:create": "node backend/src/scripts/create-admin.js",
+    "migrate:supabase": "node scripts/migrate-to-supabase.js",
+    "supabase:link": "supabase link --project-ref sxwsxouwvubieeoxgbsk",
+    "supabase:push": "supabase db push"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.14",
@@ -29,6 +32,7 @@
     "sharp": "^0.35.5"
   },
   "devDependencies": {
-    "concurrently": "^10.0.5"
+    "concurrently": "^10.0.5",
+    "supabase": "^2.121.0"
   }
 }
