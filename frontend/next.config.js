@@ -43,6 +43,13 @@ const nextConfig = {
     // Otherwise, native Next.js App Router API routes in app/api/... will serve all requests directly!
     return [];
   },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': __dirname,
+    };
+    return config;
+  },
 };
 
 module.exports = nextConfig;
