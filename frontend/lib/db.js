@@ -270,9 +270,9 @@ function getPgPool() {
     const pool = new Pool({
       connectionString: dbUrl,
       ssl,
-      connectionTimeoutMillis: 3000,
-      statement_timeout: 4000,
-      query_timeout: 4000,
+      connectionTimeoutMillis: 10000,
+      statement_timeout: 10000,
+      query_timeout: 10000,
       idleTimeoutMillis: 10000,
       max: 5
     });

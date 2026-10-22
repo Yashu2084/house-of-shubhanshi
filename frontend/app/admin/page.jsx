@@ -116,22 +116,10 @@ export default function AdminDashboardPage() {
       if (healthRes) setDbStatus(healthRes);
       if (overviewRes && overviewRes.success) setOverview(overviewRes.data);
       if (productsRes && productsRes.success && Array.isArray(productsRes.data)) {
-        setProducts(prev => {
-          const fresh = productsRes.data || [];
-          if (fresh.length === 0 && prev.length > 0) return prev;
-          const freshIds = new Set(fresh.map(p => p.id));
-          const sessionOnly = prev.filter(p => !freshIds.has(p.id) && (p.id.startsWith('prod_') || p.id.startsWith('temp_')));
-          return [...sessionOnly, ...fresh];
-        });
+        setProducts(productsRes.data || []);
       }
       if (collectionsRes && collectionsRes.success && Array.isArray(collectionsRes.data)) {
-        setCollections(prev => {
-          const fresh = collectionsRes.data || [];
-          if (fresh.length === 0 && prev.length > 0) return prev;
-          const freshIds = new Set(fresh.map(c => c.id));
-          const sessionOnly = prev.filter(c => !freshIds.has(c.id) && (c.id.startsWith('col_') || c.id.startsWith('temp_')));
-          return [...sessionOnly, ...fresh];
-        });
+        setCollections(collectionsRes.data || []);
       }
       if (customersRes && customersRes.success) setCustomers(customersRes.data || []);
     } catch (err) {
@@ -303,7 +291,10 @@ export default function AdminDashboardPage() {
         showToast(`"${payload.name}" updated successfully.`);
       } else {
         const res = await api.post('/products', payload);
-        const created = (res && res.data) ? res.data : { ...payload, id: `prod_${Date.now()}` };
+        if (!res || !res.success || !res.data) {
+          throw new Error(res?.message || 'Database error: product could not be created');
+        }
+        const created = res.data;
         setProducts(prev => [created, ...prev.filter(p => p.id !== created.id)]);
         showToast(`"${payload.name}" created successfully.`);
       }
