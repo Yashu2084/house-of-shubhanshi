@@ -6,7 +6,49 @@
 // ==============================================================================
 const fs = require('fs');
 const path = require('path');
+const tls = require('tls');
 const bcrypt = require('bcryptjs');
+const { parse: parsePgUrl } = require('pg-connection-string');
+
+// Official Supabase Root 2021 CA certificate (for secure TLS verification with rejectUnauthorized: true)
+const SUPABASE_ROOT_CA_CERT = `-----BEGIN CERTIFICATE-----
+MIIDxDCCAqygAwIBAgIUbLxMod62P2ktCiAkxnKJwtE9VPYwDQYJKoZIhvcNAQEL
+BQAwazELMAkGA1UEBhMCVVMxEDAOBgNVBAgMB0RlbHdhcmUxEzARBgNVBAcMCk5l
+dyBDYXN0bGUxFTATBgNVBAoMDFN1cGFiYXNlIEluYzEeMBwGA1UEAwwVU3VwYWJh
+c2UgUm9vdCAyMDIxIENBMB4XDTIxMDQyODEwNTY1M1oXDTMxMDQyNjEwNTY1M1ow
+azELMAkGA1UEBhMCVVMxEDAOBgNVBAgMB0RlbHdhcmUxEzARBgNVBAcMCk5ldyBD
+YXN0bGUxFTATBgNVBAoMDFN1cGFiYXNlIEluYzEeMBwGA1UEAwwVU3VwYWJhc2Ug
+Um9vdCAyMDIxIENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQXW
+QyHOB+qR2GJobCq/CBmQ40G0oDmCC3mzVnn8sv4XNeWtE5XcEL0uVih7Jo4Dkx1Q
+DmGHBH1zDfgs2qXiLb6xpw/CKQPypZW1JssOTMIfQppNQ87K75Ya0p25Y3ePS2t2
+GtvHxNjUV6kjOZjEn2yWEcBdpOVCUYBVFBNMB4YBHkNRDa/+S4uywAoaTWnCJLUi
+cvTlHmMw6xSQQn1UfRQHk50DMCEJ7Cy1RxrZJrkXXRP3LqQL2ijJ6F4yMfh+Gyb4
+O4XajoVj/+R4GwywKYrrS8PrSNtwxr5StlQO8zIQUSMiq26wM8mgELFlS/32Uclt
+NaQ1xBRizkzpZct9DwIDAQABo2AwXjALBgNVHQ8EBAMCAQYwHQYDVR0OBBYEFKjX
+uXY32CztkhImng4yJNUtaUYsMB8GA1UdIwQYMBaAFKjXuXY32CztkhImng4yJNUt
+aUYsMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBAB8spzNn+4VU
+tVxbdMaX+39Z50sc7uATmus16jmmHjhIHz+l/9GlJ5KqAMOx26mPZgfzG7oneL2b
+VW+WgYUkTT3XEPFWnTp2RJwQao8/tYPXWEJDc0WVQHrpmnWOFKU/d3MqBgBm5y+6
+jB81TU/RG2rVerPDWP+1MMcNNy0491CTL5XQZ7JfDJJ9CCmXSdtTl4uUQnSuv/Qx
+Cea13BX2ZgJc7Au30vihLhub52De4P/4gonKsNHYdbWjg7OWKwNv/zitGDVDB9Y2
+CMTyZKG3XEu5Ghl1LEnI3QmEKsqaCLv12BnVjbkSeZsMnevJPs1Ye6TjjJwdik5P
+o/bKiIz+Fq8=
+-----END CERTIFICATE-----`;
+
+function getTrustedCAs() {
+  const cas = [...(tls.rootCertificates || []), SUPABASE_ROOT_CA_CERT];
+  if (process.env.SUPABASE_SSL_CERT) {
+    cas.push(process.env.SUPABASE_SSL_CERT);
+  }
+  const certFilePath = path.resolve(__dirname, '../certs/supabase-root-ca.crt');
+  if (fs.existsSync(certFilePath)) {
+    try {
+      const fileCert = fs.readFileSync(certFilePath, 'utf-8');
+      if (fileCert && !cas.includes(fileCert)) cas.push(fileCert);
+    } catch (e) {}
+  }
+  return cas;
+}
 
 let isPostgresInitialized = false;
 
@@ -261,15 +303,23 @@ function getPgPool() {
 
   try {
     const { Pool } = require('pg');
-    const isProduction = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
-    const isRemote = !dbUrl.includes('localhost') && !dbUrl.includes('127.0.0.1');
-    const ssl = (isProduction || isRemote || dbUrl.includes('sslmode='))
-      ? { rejectUnauthorized: false }
-      : false;
+    const parsed = parsePgUrl(dbUrl);
+    const isRemote = !parsed.host || (!parsed.host.includes('localhost') && !parsed.host.includes('127.0.0.1'));
+
+    let sslConfig = false;
+    if (isRemote || dbUrl.includes('sslmode=')) {
+      sslConfig = {
+        rejectUnauthorized: true,
+        ca: getTrustedCAs(),
+        servername: parsed.host || undefined
+      };
+    }
+
+    parsed.ssl = sslConfig;
 
     const pool = new Pool({
-      connectionString: dbUrl,
-      ssl,
+      ...parsed,
+      ssl: sslConfig,
       connectionTimeoutMillis: 10000,
       statement_timeout: 10000,
       query_timeout: 10000,
@@ -434,6 +484,7 @@ const db = {
         type: 'placeholder'
       };
     }
+    const isProd = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
     const pool = getPgPool();
     if (pool) {
       try {
@@ -442,8 +493,15 @@ const db = {
         return { ok: !!res.rows, type: 'postgres' };
       } catch (e) {
         console.warn('[DB testConnection Error]', e.message);
-        return { ok: false, error: e.message, type: 'fallback' };
+        return { ok: false, error: e.message, type: 'disconnected' };
       }
+    }
+    if (isProd) {
+      return {
+        ok: false,
+        error: 'Primary PostgreSQL database is not configured. In production, persistent storage requires a valid DATABASE_URL in Vercel settings.',
+        type: 'disconnected'
+      };
     }
     return { ok: true, type: 'memstore' };
   },
@@ -848,6 +906,8 @@ const db = {
           console.error('[DB Product Create PG Error]', pgErr.message);
           throw new Error('Database error saving product: ' + pgErr.message);
         }
+      } else if (process.env.NODE_ENV === 'production' || !!process.env.VERCEL) {
+        throw new Error('Database write rejected: No active PostgreSQL connection in production. Please configure DATABASE_URL in Vercel settings.');
       }
 
       store.products.unshift(newProd);
@@ -1012,6 +1072,8 @@ const db = {
           } catch (e2) {}
           throw new Error('Database delete error: ' + pgErr.message);
         }
+      } else if (process.env.NODE_ENV === 'production' || !!process.env.VERCEL) {
+        throw new Error('Database delete rejected: No active PostgreSQL connection in production. Please configure DATABASE_URL in Vercel settings.');
       }
 
       const store = loadMemStore();
@@ -1128,6 +1190,8 @@ const db = {
           console.error('[DB Collection Create PG Error]', pgErr.message);
           throw new Error('Database error saving collection: ' + pgErr.message);
         }
+      } else if (process.env.NODE_ENV === 'production' || !!process.env.VERCEL) {
+        throw new Error('Database write rejected: No active PostgreSQL connection in production. Please configure DATABASE_URL in Vercel settings.');
       }
 
       store.collections.push(newCol);
@@ -1176,6 +1240,8 @@ const db = {
           console.error('[DB Collection Update PG Error]', pgErr.message);
           throw new Error('Database error updating collection: ' + pgErr.message);
         }
+      } else if (process.env.NODE_ENV === 'production' || !!process.env.VERCEL) {
+        throw new Error('Database update rejected: No active PostgreSQL connection in production. Please configure DATABASE_URL in Vercel settings.');
       }
 
       const store = loadMemStore();
@@ -1209,6 +1275,8 @@ const db = {
           console.error('[DB Collection Delete PG Error]', pgErr.message);
           throw new Error('Database delete error: ' + pgErr.message);
         }
+      } else if (process.env.NODE_ENV === 'production' || !!process.env.VERCEL) {
+        throw new Error('Database delete rejected: No active PostgreSQL connection in production. Please configure DATABASE_URL in Vercel settings.');
       }
 
       const store = loadMemStore();

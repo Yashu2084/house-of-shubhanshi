@@ -687,9 +687,9 @@ export default function AdminDashboardPage() {
                   marginBottom: '24px',
                   padding: '12px 18px',
                   borderRadius: '3px',
-                  border: dbStatus.database === 'postgres' ? '1px solid #A7F3D0' : '1px solid #FCD34D',
-                  background: dbStatus.database === 'postgres' ? '#ECFDF5' : '#FFFBEB',
-                  color: dbStatus.database === 'postgres' ? '#065F46' : '#92400E',
+                  border: dbStatus.database === 'postgres' ? '1px solid #A7F3D0' : '1px solid #FCA5A5',
+                  background: dbStatus.database === 'postgres' ? '#ECFDF5' : '#FEF2F2',
+                  color: dbStatus.database === 'postgres' ? '#065F46' : '#991B1B',
                   fontSize: '0.82rem',
                   display: 'flex',
                   alignItems: 'center',
@@ -698,18 +698,32 @@ export default function AdminDashboardPage() {
                   gap: '10px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '1rem' }}>{dbStatus.database === 'postgres' ? '🟢' : '⚡'}</span>
+                    <span style={{ fontSize: '1rem' }}>{dbStatus.database === 'postgres' ? '🟢' : '🔴'}</span>
                     <span>
-                      <strong>Database Engine:</strong> {dbStatus.database === 'postgres' ? 'Cloud PostgreSQL Connected (Permanent Multi-Region Storage)' : 'Unified Persistent Store Active'}
-                      {dbStatus.database === 'placeholder' && (
-                        <span style={{ display: 'block', fontSize: '0.76rem', marginTop: '3px', color: '#B45309' }}>
-                          Notice: <code>DATABASE_URL</code> on Vercel contains placeholder credentials. For cross-lambda PostgreSQL clustering, provide your real PostgreSQL connection URL in Vercel settings.
+                      <strong>Database Engine:</strong>{' '}
+                      {dbStatus.database === 'postgres'
+                        ? 'Cloud PostgreSQL Connected (Supabase Hosted Database)'
+                        : 'Primary Database Disconnected'}
+                      {dbStatus.database !== 'postgres' && (
+                        <span style={{ display: 'block', fontSize: '0.76rem', marginTop: '3px', color: '#B91C1C' }}>
+                          {dbStatus.error
+                            ? `Connection Error: ${dbStatus.error}`
+                            : 'PostgreSQL connection not detected. Set DATABASE_URL in Vercel to enable permanent catalog persistence.'}
                         </span>
                       )}
                     </span>
                   </div>
-                  <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, padding: '3px 8px', borderRadius: '2px', background: dbStatus.database === 'postgres' ? '#D1FAE5' : '#FEF3C7' }}>
-                    {dbStatus.database === 'postgres' ? 'PostgreSQL Active' : 'Fallback Engine'}
+                  <span style={{
+                    fontSize: '0.72rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    fontWeight: 600,
+                    padding: '3px 8px',
+                    borderRadius: '2px',
+                    background: dbStatus.database === 'postgres' ? '#D1FAE5' : '#FEE2E2',
+                    color: dbStatus.database === 'postgres' ? '#065F46' : '#991B1B'
+                  }}>
+                    {dbStatus.database === 'postgres' ? 'PostgreSQL Active' : 'Database Offline'}
                   </span>
                 </div>
               )}

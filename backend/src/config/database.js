@@ -3,8 +3,50 @@
 // ==============================================================================
 const fs = require('fs');
 const path = require('path');
+const tls = require('tls');
 const { Pool } = require('pg');
+const { parse: parsePgUrl } = require('pg-connection-string');
 const env = require('./env');
+
+// Official Supabase Root 2021 CA certificate (for secure TLS verification with rejectUnauthorized: true)
+const SUPABASE_ROOT_CA_CERT = `-----BEGIN CERTIFICATE-----
+MIIDxDCCAqygAwIBAgIUbLxMod62P2ktCiAkxnKJwtE9VPYwDQYJKoZIhvcNAQEL
+BQAwazELMAkGA1UEBhMCVVMxEDAOBgNVBAgMB0RlbHdhcmUxEzARBgNVBAcMCk5l
+dyBDYXN0bGUxFTATBgNVBAoMDFN1cGFiYXNlIEluYzEeMBwGA1UEAwwVU3VwYWJh
+c2UgUm9vdCAyMDIxIENBMB4XDTIxMDQyODEwNTY1M1oXDTMxMDQyNjEwNTY1M1ow
+azELMAkGA1UEBhMCVVMxEDAOBgNVBAgMB0RlbHdhcmUxEzARBgNVBAcMCk5ldyBD
+YXN0bGUxFTATBgNVBAoMDFN1cGFiYXNlIEluYzEeMBwGA1UEAwwVU3VwYWJhc2Ug
+Um9vdCAyMDIxIENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQXW
+QyHOB+qR2GJobCq/CBmQ40G0oDmCC3mzVnn8sv4XNeWtE5XcEL0uVih7Jo4Dkx1Q
+DmGHBH1zDfgs2qXiLb6xpw/CKQPypZW1JssOTMIfQppNQ87K75Ya0p25Y3ePS2t2
+GtvHxNjUV6kjOZjEn2yWEcBdpOVCUYBVFBNMB4YBHkNRDa/+S4uywAoaTWnCJLUi
+cvTlHmMw6xSQQn1UfRQHk50DMCEJ7Cy1RxrZJrkXXRP3LqQL2ijJ6F4yMfh+Gyb4
+O4XajoVj/+R4GwywKYrrS8PrSNtwxr5StlQO8zIQUSMiq26wM8mgELFlS/32Uclt
+NaQ1xBRizkzpZct9DwIDAQABo2AwXjALBgNVHQ8EBAMCAQYwHQYDVR0OBBYEFKjX
+uXY32CztkhImng4yJNUtaUYsMB8GA1UdIwQYMBaAFKjXuXY32CztkhImng4yJNUt
+aUYsMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBAB8spzNn+4VU
+tVxbdMaX+39Z50sc7uATmus16jmmHjhIHz+l/9GlJ5KqAMOx26mPZgfzG7oneL2b
+VW+WgYUkTT3XEPFWnTp2RJwQao8/tYPXWEJDc0WVQHrpmnWOFKU/d3MqBgBm5y+6
+jB81TU/RG2rVerPDWP+1MMcNNy0491CTL5XQZ7JfDJJ9CCmXSdtTl4uUQnSuv/Qx
+Cea13BX2ZgJc7Au30vihLhub52De4P/4gonKsNHYdbWjg7OWKwNv/zitGDVDB9Y2
+CMTyZKG3XEu5Ghl1LEnI3QmEKsqaCLv12BnVjbkSeZsMnevJPs1Ye6TjjJwdik5P
+o/bKiIz+Fq8=
+-----END CERTIFICATE-----`;
+
+function getTrustedCAs() {
+  const cas = [...(tls.rootCertificates || []), SUPABASE_ROOT_CA_CERT];
+  if (process.env.SUPABASE_SSL_CERT) {
+    cas.push(process.env.SUPABASE_SSL_CERT);
+  }
+  const certFilePath = path.resolve(__dirname, '../../../certs/supabase-root-ca.crt');
+  if (fs.existsSync(certFilePath)) {
+    try {
+      const fileCert = fs.readFileSync(certFilePath, 'utf-8');
+      if (fileCert && !cas.includes(fileCert)) cas.push(fileCert);
+    } catch (e) {}
+  }
+  return cas;
+}
 
 let pool = null;
 let pgliteInstance = null;
@@ -21,14 +63,22 @@ async function initDb() {
   // Try standard PostgreSQL connection via pg.Pool
   if (env.DATABASE_URL && !env.DATABASE_URL.includes('embedded')) {
     try {
-      const ssl = env.DATABASE_URL.includes('sslmode=require') || env.NODE_ENV === 'production'
-        ? { rejectUnauthorized: false }
-        : false;
+      const parsed = parsePgUrl(env.DATABASE_URL);
+      const isRemote = !parsed.host || (!parsed.host.includes('localhost') && !parsed.host.includes('127.0.0.1'));
+      let sslConfig = false;
+      if (isRemote || env.DATABASE_URL.includes('sslmode=') || env.NODE_ENV === 'production') {
+        sslConfig = {
+          rejectUnauthorized: true,
+          ca: getTrustedCAs(),
+          servername: parsed.host || undefined
+        };
+      }
+      parsed.ssl = sslConfig;
 
       const testPool = new Pool({
-        connectionString: env.DATABASE_URL,
-        ssl,
-        connectionTimeoutMillis: 3000
+        ...parsed,
+        ssl: sslConfig,
+        connectionTimeoutMillis: 5000
       });
 
       // Test connectivity
